@@ -60,6 +60,7 @@ export const LocationSchema = z.object({
   floorName: z.string(),
   venue: z.string(),
   geometry: GeometrySchema,
+  anchor: z.tuple([z.number(), z.number()]),
   // Mapindoors sourcing.
   mapIndoorsSource: z.object({
     id: z.string(),

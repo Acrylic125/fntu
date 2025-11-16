@@ -51,22 +51,22 @@ function mapByName(name: string) {
     altNames.push(`TR+${room}`);
   }
 
-  // Arc
-  if (name.match(new RegExp(`Tutorial Room \\+ [0-9]+ \\(The Arc\\)$`))) {
-    const [, , , room] = name.split(" ");
-    if (room.length === 1) {
-      altNames.push(`LHN-TR+0${room}`);
-    }
-    altNames.push(`LHN-TR+${room}`);
-  }
+  const BUILDING_PREFIXES = [
+    ["The Arc", "LHN"],
+    ["The Hive", "LHS"],
+    ["SPMS", "SPMS"],
+    ["SBS", "SBS"],
+    ["HSS", "HSS"],
+  ];
 
-  // Hive
-  if (name.match(new RegExp(`Tutorial Room \\+ [0-9]+ \\(The Hive\\)$`))) {
-    const [, , , room] = name.split(" ");
-    if (room.length === 1) {
-      altNames.push(`LHS-TR+0${room}`);
+  for (const [building, prefix] of BUILDING_PREFIXES) {
+    if (name.match(new RegExp(`Tutorial Room \\+ [0-9]+ \\(${building}\\)$`))) {
+      const [, , , room] = name.split(" ");
+      if (room.length === 1) {
+        altNames.push(`${prefix}-TR+0${room}`);
+      }
+      altNames.push(`${prefix}-TR+${room}`);
     }
-    altNames.push(`LHS-TR+${room}`);
   }
 
   // BIE
@@ -82,6 +82,19 @@ function mapByName(name: string) {
     altNames.push(`BIE-TR+${room}`);
   }
 
+  if (name.match(new RegExp(`LT[0-9]+(A|) \\((NS|SS)\\)`))) {
+    const [ltRoom] = name.split(" ");
+    const room = ltRoom.replace("LT", "");
+
+    altNames.push(`LT${room}`);
+  }
+
+  if (name.match(new RegExp(`LT[0-9]+(A|) \\(SPMS\\)`))) {
+    const [ltRoom] = name.split(" ");
+    const room = ltRoom.replace("LT", "");
+
+    altNames.push(`SPMS-LT${room}`);
+  }
   return altNames;
 }
 
@@ -107,6 +120,7 @@ export function mapAltNames(
       type: location.properties.type,
       imageUrl: location.properties.imageURL,
       geometry: location.geometry,
+      anchor: location.properties.anchor.coordinates,
       mapIndoorsSource: {
         id: location.id,
         roomId: location.properties.roomId,
