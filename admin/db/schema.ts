@@ -9,6 +9,7 @@ import {
   customType,
   pgEnum,
   boolean,
+  real,
 } from "drizzle-orm/pg-core";
 
 export const tsvector = customType<{
@@ -117,4 +118,40 @@ export const venuesTable = pgTable("venues", {
   bookableByStaff: boolean().notNull().default(false),
   bookableByStudentOrganizations: boolean().notNull().default(false),
   remarks: varchar({ length: 128 }),
+});
+
+export const locationsTable = pgTable(
+  "locations",
+  {
+    id: serial().notNull().primaryKey(),
+    category: varchar({ length: 64 }).notNull(),
+    name: varchar({ length: 255 }).notNull(),
+    altNames: varchar({ length: 255 }).array().notNull(),
+    building: varchar({ length: 64 }),
+    floor: varchar({ length: 32 }).notNull(),
+    floorName: varchar({ length: 64 }).notNull(),
+    venue: varchar({ length: 32 }).notNull(),
+    type: varchar({ length: 32 }).notNull(),
+    imageUrl: varchar({ length: 256 }),
+    mapIndoorsId: varchar({ length: 64 }).notNull(),
+    mapIndoorsRoomId: varchar({ length: 64 }),
+  },
+  (t) => [
+    unique("idx_locations_mapIndoorsId_mapIndoorsRoomId").on(
+      t.mapIndoorsId,
+      t.mapIndoorsRoomId
+    ),
+    unique("idx_locations_name").on(t.name),
+  ]
+);
+
+export const locationGeometryTable = pgTable("location_geometry", {
+  id: serial().notNull().primaryKey(),
+  locationId: integer()
+    .notNull()
+    .references(() => locationsTable.id, { onDelete: "cascade" }),
+  // Low means first, high means last.
+  order: integer().notNull(),
+  longitude: real().notNull(),
+  latitude: real().notNull(),
 });

@@ -15,6 +15,34 @@
       "when": 1761483783482,
       "tag": "0001_youthful_mister_sinister",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1763292100481,
+      "tag": "0002_fuzzy_ma_gnuci",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1763293787716,
+      "tag": "0003_massive_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1763293893810,
+      "tag": "0004_lying_silver_fox",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1763294204259,
+      "tag": "0005_green_human_robot",
+      "breakpoints": true
     }
   ]
 }

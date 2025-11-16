@@ -5,8 +5,8 @@ import {
   ProgramSourceSchema,
   ProgramSchema,
   VenueListSchema,
-} from "./schema";
-import { db } from "./db";
+} from "../schema";
+import { db } from "../db";
 import {
   courseIndexClassesTable,
   courseIndexSourcesTable,
@@ -14,11 +14,11 @@ import {
   coursesTable,
   programsTable,
   venuesTable,
-} from "./db/schema";
+} from "../db/schema";
 import path from "path";
 import fs from "fs";
 import { and, eq } from "drizzle-orm";
-import { extractCourseNameAndFlags } from "./utils";
+import { extractCourseNameAndFlags } from "../utils";
 
 async function getMetadata(dir: string) {
   const metadata = MetadataSchema.parse(

@@ -135,7 +135,7 @@ export function mapAltNames(
     fs.mkdirSync("./out");
   }
   const categories = ALL_CATEGORIES;
-  const results = [];
+  const results: ReturnType<typeof mapAltNames> = [];
   for (const category of categories) {
     const locations = MapsindoorsLocationArraySchema.parse(
       JSON.parse(fs.readFileSync(`./out/${category}.json`, "utf8"))
@@ -143,6 +143,66 @@ export function mapAltNames(
     const mappedLocations = mapAltNames(locations, category);
     results.push(...mappedLocations);
   }
+
+  results.sort((a, b) => a.name.localeCompare(b.name));
+
+  let prevName = results[0].name;
+  for (let i = 1; i < results.length; i++) {
+    if (results[i].name === prevName) {
+      // Check if the previous was set.
+      if (results[i - 1].name === prevName) {
+        if (
+          results[i - 1].mapIndoorsSource.roomId !== null &&
+          results[i - 1].mapIndoorsSource.roomId !== ""
+        ) {
+          const floorName = results[i - 1].floorName;
+          results[i - 1].name =
+            `${prevName} (${results[i - 1].mapIndoorsSource.roomId})`;
+          if (floorName !== "") {
+            results[i - 1].name = `${prevName} ${floorName}`;
+          }
+        }
+      }
+
+      // Update the current accordingly.
+      if (
+        results[i].mapIndoorsSource.roomId !== null &&
+        results[i].mapIndoorsSource.roomId !== ""
+      ) {
+        const floorName = results[i].floorName;
+        results[i].name =
+          `${results[i].name} (${results[i].mapIndoorsSource.roomId})`;
+        if (floorName !== "") {
+          results[i].name = `${results[i].name} ${floorName}`;
+        }
+      }
+    } else {
+      prevName = results[i].name;
+    }
+  }
+
+  results.sort((a, b) => a.name.localeCompare(b.name));
+
+  // 1 More time, we will scan through all the results.
+  // This time, if there are duplicates, we will append
+  // the entries with "#1", "#2", etc.
+  prevName = results[0].name;
+  let prevCounter = 0;
+  for (let i = 1; i < results.length; i++) {
+    if (results[i].name === prevName) {
+      // If previous has yet to be set, then we will set it.
+      if (results[i - 1].name === prevName) {
+        prevCounter++;
+        results[i - 1].name = `${results[i - 1].name} #${prevCounter}`;
+      }
+      prevCounter++;
+      results[i].name = `${results[i].name} #${prevCounter}`;
+    } else {
+      prevName = results[i].name;
+      prevCounter = 0;
+    }
+  }
+
   fs.writeFileSync(
     `./out/facilities-transformed.json`,
     JSON.stringify(results, null, 2)

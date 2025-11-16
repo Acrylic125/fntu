@@ -1,0 +1,1 @@
+ALTER TABLE "locations" DROP CONSTRAINT "idx_locations_altNames";

@@ -1,0 +1,1 @@
+ALTER TABLE "locations" ALTER COLUMN "altNames" SET DATA TYPE varchar(128)[];
