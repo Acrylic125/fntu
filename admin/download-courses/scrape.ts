@@ -11,8 +11,8 @@ import {
   ProgramCoursesSchema,
   MetadataSchema,
   CourseCode,
-} from "./schema";
-import { parseTeachingWeeks } from "./utils";
+} from "../schema";
+import { parseTeachingWeeks } from "../utils";
 
 // Helper function to parse time string (e.g., "1830" -> { hour: 18, minute: 30 })
 function parseTime(timeStr: string): Time {

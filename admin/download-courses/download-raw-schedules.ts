@@ -1,7 +1,7 @@
 import fs from "fs";
 import seedrandom from "seedrandom";
 import { z } from "zod";
-import { MetadataSchema, ProgramSource } from "./schema";
+import { MetadataSchema, ProgramSource } from "../schema";
 
 const SOURCE_BASE_URL =
   "https://wish.wis.ntu.edu.sg/webexe/owa/AUS_SCHEDULE.main_display1";

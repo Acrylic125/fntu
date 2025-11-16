@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import path from "path";
 import fs from "fs";
-import { VenueSchema, Venue } from "./schema";
+import { VenueSchema, Venue } from "../schema";
 
 const remarksInVenue = [
   "dedicated to students' use",
