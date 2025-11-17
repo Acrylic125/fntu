@@ -73,7 +73,7 @@ async function doInsertLocationAltNames() {
   } catch (error) {
     console.log(error);
   }
-  console.log("Locations inserted");
+  console.log("Locations Alt names inserted");
 }
 
 (async () => {

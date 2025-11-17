@@ -45,8 +45,28 @@ export const MapsindoorsLocationSchema = z.object({
 
 export const ALL_CATEGORIES = [
   "AcademicFacilities",
-  "LabsStudioWorkshops",
+  "Accomodations",
+  "Art",
+  "BOH",
+  "BuildingsLandmarks",
+  "BusStop",
+  "Carparks",
+  "Clinics and Childcare",
+  "CollegesSchoolsInstitutes",
+  "Commercials",
+  "Emergency",
+  "Events and Activities",
+  "Food and Beverages",
   "General",
+  "Handicapped Facilities",
+  "LabsStudioWorkshops",
+  "Libraries",
+  "MeetingRooms",
+  "OfficesDepartments",
+  "ResearchCentres",
+  "StudentsSportsRecreation",
+  "Toilet",
+  "Unknown",
 ] as const;
 
 export const LocationSchema = z.object({

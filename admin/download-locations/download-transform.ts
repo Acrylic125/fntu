@@ -82,7 +82,7 @@ function mapByName(name: string) {
     altNames.push(`BIE-TR+${room}`);
   }
 
-  if (name.match(new RegExp(`LT[0-9]+(A|) \\((NS|SS)\\)`))) {
+  if (name.match(new RegExp(`LT[0-9]+(A|) \\((NS|SS|N2)\\)`))) {
     const [ltRoom] = name.split(" ");
     const room = ltRoom.replace("LT", "");
 
@@ -95,6 +95,30 @@ function mapByName(name: string) {
 
     altNames.push(`SPMS-LT${room}`);
   }
+
+  // CSKL
+  if (
+    name.match(
+      new RegExp(`Communication Skills Lab [0-9]+[A-Za-z]* \\((SS|NS)\\)`)
+    )
+  ) {
+    const [, , , room] = name.split(" ");
+    altNames.push(`CSKL${room}`);
+  }
+
+  // CL
+  if (name.match(new RegExp(`Communication Lab [0-9]+[A-Za-z]* \\((S4)\\)$`))) {
+    const [, , room] = name.split(" ");
+    altNames.push(`S4-CL${room}`);
+  }
+
+  // Seminar Rooms
+  if (name.match(new RegExp(`Seminar Room [0-9]+ - NBS \\((S3|S4)\\)`))) {
+    const [, , room, , , _building] = name.split(" ");
+    const building = _building.replace("(", "").replace(")", "");
+    altNames.push(`${building}-SR${room}`);
+  }
+
   return altNames;
 }
 
