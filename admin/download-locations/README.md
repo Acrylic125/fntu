@@ -27,6 +27,7 @@ The names provided by Mapindoors are not `1:1` to what's used by STARs / Booking
 Example, `Mapindoors` -> `Alternative Names`
 - `LT1A (NS)` -> `LT1A` | `LT1A-01-01`
 - `Tutorial Room + 2 (NS)` -> `TR+2` | `NS4-05-80`
+
 **DO NOTE THAT ALT NAMES CAN RELATE TO MULTIPLE OF THE SAME LOCATIONS**. 
 
 We employ Regex and direct mapping strategies sourced from NTU.

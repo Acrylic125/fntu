@@ -1,7 +1,22 @@
 import * as cheerio from "cheerio";
 import path from "path";
 import fs from "fs";
-import { VenueSchema, Venue } from "../schema";
+import z from "zod";
+
+export const FacilitySchema = z.object({
+  venue: z.string(), // Facility
+  area: z.string(), // Spine
+  capacity: z.number(), // Capacity
+  location: z.string(), // Location
+  bookableByStaff: z.boolean(), // Bookable by staff
+  bookableByStudentOrganizations: z.boolean(), // Bookable by student organizations
+  remarks: z.string().optional(), // Remarks
+  locationRemarks: z.string().optional(), // Location Remarks
+});
+
+export const FacilityArraySchema = z.array(FacilitySchema);
+
+export type Facility = z.infer<typeof FacilitySchema>;
 
 const remarksInVenue = [
   "dedicated to students' use",
@@ -16,8 +31,8 @@ const remarksInVenue = [
   "Dr Elsie Yu Chen Chee (1999)",
 ];
 
-function scrapeFacilitiesFromHTML(html: string): Venue[] {
-  const venues: Venue[] = [];
+function scrapeFacilitiesFromHTML(html: string): Facility[] {
+  const venues: Facility[] = [];
   const $ = cheerio.load(html);
 
   // Find the main table containing facility data
@@ -80,7 +95,7 @@ function scrapeFacilitiesFromHTML(html: string): Venue[] {
               bookableByStudentOrgsText.toUpperCase() === "YES";
 
             try {
-              const venueData: Venue = {
+              const venueData: Facility = {
                 venue,
                 area,
                 capacity: isNaN(capacity) ? 0 : capacity,
@@ -91,7 +106,7 @@ function scrapeFacilitiesFromHTML(html: string): Venue[] {
               };
 
               // Validate with Zod schema
-              VenueSchema.parse(venueData);
+              FacilitySchema.parse(venueData);
               venues.push(venueData);
             } catch (error) {
               console.warn(`Failed to parse venue data for ${venue}:`, error);
@@ -104,19 +119,75 @@ function scrapeFacilitiesFromHTML(html: string): Venue[] {
   return venues;
 }
 
+// function stripLocationRemarks(location: string) {
+//   const splitLocation = location.split(" ");
+//   if (splitLocation.length === 0) {
+//     return null;
+//   }
+//   const realLocation = splitLocation[0].replace(",", "");
+//   const locationRemarks = splitLocation.slice(1).join(" ");
+//   return { realLocation, locationRemarks };
+// }
+
+function transformFacility(facility: Facility): Facility {
+  let location = facility.location;
+  let locationRemarks = "";
+  const splitLocation = location.split(" ");
+  if (splitLocation.length > 1) {
+    location = splitLocation[0].replace(",", "");
+    locationRemarks = splitLocation.slice(1).join(" ");
+  }
+
+  return { ...facility, location, locationRemarks };
+}
+
 // Main execution
-const htmlPath = path.resolve("./out/scrape-facilities.html");
-const outputPath = path.resolve("./out/venues.json");
+(async () => {
+  const workDir = `${__dirname}/out`;
+  if (!fs.existsSync(workDir)) {
+    fs.mkdirSync(workDir);
+  }
 
-console.log("Reading HTML file...");
-const html = fs.readFileSync(htmlPath, "utf8");
+  const url = "https://wis.ntu.edu.sg/pls/webexe88/FBSDOCU.FBSLOCATN";
+  const response = await fetch(url);
+  const html = await response.text();
 
-console.log("Scraping facilities data...");
-const venues = scrapeFacilitiesFromHTML(html);
+  console.log("Writing HTML to file...");
+  // Only used for a reference.
+  fs.writeFileSync(
+    path.resolve(workDir, "mappings-raw_scrape-ns-ss-arc-hive-facilities.html"),
+    html
+  );
 
-console.log(`Found ${venues.length} venues`);
+  const rawOutputPath = path.resolve(
+    workDir,
+    "mappings-raw_facilities-ns-ss-arc-hive.json"
+  );
+  const mappingsOutputPath = path.resolve(
+    workDir,
+    "mappings_facilities-ns-ss-arc-hive.json"
+  );
 
-// Write to JSON file
-fs.writeFileSync(outputPath, JSON.stringify(venues, null, 2));
+  console.log("Scraping facilities data...");
+  const facilities = scrapeFacilitiesFromHTML(html);
 
-console.log(`Venues data written to ${outputPath}`);
+  console.log(`Found ${facilities.length} venues`);
+  // Strip location remarks
+  const transformedFacilities = facilities.map(transformFacility);
+
+  // Write to JSON file
+  fs.writeFileSync(
+    rawOutputPath,
+    JSON.stringify(transformedFacilities, null, 2)
+  );
+
+  console.log(`Raw facilotoes data written to ${rawOutputPath}`);
+
+  let mappings: Record<string, string> = {};
+  for (const facility of transformedFacilities) {
+    mappings[facility.location] = facility.venue;
+  }
+  fs.writeFileSync(mappingsOutputPath, JSON.stringify(mappings, null, 2));
+
+  console.log(`Mappings data written to ${mappingsOutputPath}`);
+})();

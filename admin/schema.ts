@@ -90,17 +90,3 @@ export type Program = z.infer<typeof ProgramSchema>;
 export type MetadataEntry = z.infer<typeof MetadataEntrySchema>;
 
 export type CourseCode = string;
-
-export const VenueSchema = z.object({
-  venue: z.string(), // Facility
-  area: z.string(), // Spine
-  capacity: z.number(), // Capacity
-  location: z.string(), // Location
-  bookableByStaff: z.boolean(), // Bookable by staff
-  bookableByStudentOrganizations: z.boolean(), // Bookable by student organizations
-  remarks: z.string().optional(), // Remarks
-});
-
-export const VenueListSchema = z.array(VenueSchema);
-
-export type Venue = z.infer<typeof VenueSchema>;
