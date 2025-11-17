@@ -1,0 +1,2 @@
+ALTER TABLE "location_alt_names" DROP CONSTRAINT "idx_location_alt_names_altName";--> statement-breakpoint
+CREATE INDEX "idx_location_alt_names_altName" ON "location_alt_names" USING btree ("altName");

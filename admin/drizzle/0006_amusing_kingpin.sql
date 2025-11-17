@@ -1,0 +1,1 @@
+CREATE INDEX "idx_locations_altNames" ON "locations" USING btree ("altNames");

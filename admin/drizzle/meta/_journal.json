@@ -43,6 +43,27 @@
       "when": 1763294204259,
       "tag": "0005_green_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1763351289981,
+      "tag": "0006_amusing_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1763351932438,
+      "tag": "0007_nebulous_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1763352662762,
+      "tag": "0008_harsh_dagger",
+      "breakpoints": true
     }
   ]
 }

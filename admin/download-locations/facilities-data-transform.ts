@@ -112,7 +112,7 @@ export function mapAltNames(
     return {
       category: category,
       name: location.properties.name,
-      altNames: altNames,
+      altNames: Array.from(new Set(altNames)),
       building: location.properties.building,
       floor: location.properties.floor,
       floorName: location.properties.floorName,
@@ -131,14 +131,14 @@ export function mapAltNames(
 
 (async () => {
   // Create out directory if not exist.
-  if (!fs.existsSync("./out")) {
-    fs.mkdirSync("./out");
+  if (!fs.existsSync(`${__dirname}/out`)) {
+    fs.mkdirSync(`${__dirname}/out`);
   }
   const categories = ALL_CATEGORIES;
   const results: ReturnType<typeof mapAltNames> = [];
   for (const category of categories) {
     const locations = MapsindoorsLocationArraySchema.parse(
-      JSON.parse(fs.readFileSync(`./out/${category}.json`, "utf8"))
+      JSON.parse(fs.readFileSync(`${__dirname}/out/${category}.json`, "utf8"))
     );
     const mappedLocations = mapAltNames(locations, category);
     results.push(...mappedLocations);
@@ -204,7 +204,7 @@ export function mapAltNames(
   }
 
   fs.writeFileSync(
-    `./out/facilities-transformed.json`,
+    `${__dirname}/out/facilities-transformed.json`,
     JSON.stringify(results, null, 2)
   );
 })();

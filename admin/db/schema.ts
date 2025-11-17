@@ -126,7 +126,6 @@ export const locationsTable = pgTable(
     id: serial().notNull().primaryKey(),
     category: varchar({ length: 64 }).notNull(),
     name: varchar({ length: 255 }).notNull(),
-    altNames: varchar({ length: 255 }).array().notNull(),
     building: varchar({ length: 64 }),
     floor: varchar({ length: 32 }).notNull(),
     floorName: varchar({ length: 64 }).notNull(),
@@ -143,6 +142,19 @@ export const locationsTable = pgTable(
     ),
     unique("idx_locations_name").on(t.name),
   ]
+);
+
+// Alt names for locations. We have tried using an array of varchar(255) but it was too slow.
+export const locationAltNamesTable = pgTable(
+  "location_alt_names",
+  {
+    id: serial().notNull().primaryKey(),
+    locationId: integer()
+      .notNull()
+      .references(() => locationsTable.id, { onDelete: "cascade" }),
+    altName: varchar({ length: 255 }).notNull(),
+  },
+  (t) => [index("idx_location_alt_names_altName").on(t.altName)]
 );
 
 export const locationGeometryTable = pgTable("location_geometry", {

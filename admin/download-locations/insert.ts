@@ -1,7 +1,7 @@
 import path from "path";
 import fs from "fs";
 import { LocationSchema } from "./schema";
-import { locationsTable } from "../db/schema";
+import { locationAltNamesTable, locationsTable } from "../db/schema";
 import { db } from "../db";
 
 function* batchIteration(batchSize: number, total: number) {
@@ -24,12 +24,11 @@ async function doInsertLocations() {
   const all = await getLocations(__dirname);
 
   try {
-    for (const { batch, end } of batchIteration(100, all.length)) {
+    for (const { batch, end } of batchIteration(1000, all.length)) {
       await db.insert(locationsTable).values(
         all.slice(batch, end).map((l) => ({
           category: l.category,
           name: l.name,
-          altNames: l.altNames,
           building: l.building,
           floor: l.floor,
           floorName: l.floorName,
@@ -40,15 +39,44 @@ async function doInsertLocations() {
           mapIndoorsRoomId: l.mapIndoorsSource.roomId,
         }))
       );
-      console.log("Inserted batch");
     }
   } catch (error) {
     console.log(error);
-    // console.error(`Error inserting locations: ${error}`);
+  }
+  console.log("Locations inserted");
+}
+
+async function doInsertLocationAltNames() {
+  const all = await getLocations(__dirname);
+
+  const locations = await db.select().from(locationsTable);
+  // Name to id mapping
+  const nameToIdMap = new Map<string, number>();
+  for (const location of locations) {
+    nameToIdMap.set(location.name, location.id);
+  }
+
+  const toInsert = [];
+  for (const location of all) {
+    for (const altName of location.altNames) {
+      toInsert.push({
+        locationId: nameToIdMap.get(location.name)!,
+        altName: altName,
+      });
+    }
+  }
+
+  try {
+    for (const { batch, end } of batchIteration(1000, toInsert.length)) {
+      await db.insert(locationAltNamesTable).values(toInsert.slice(batch, end));
+    }
+  } catch (error) {
+    console.log(error);
   }
   console.log("Locations inserted");
 }
 
 (async () => {
   await doInsertLocations();
+  await doInsertLocationAltNames();
 })();
