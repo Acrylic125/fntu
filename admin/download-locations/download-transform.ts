@@ -5,9 +5,48 @@ import {
   MapsindoorsLocationSchema,
 } from "./schema";
 import { z } from "zod";
+import path from "path";
 
 const MapsindoorsLocationArraySchema = z.array(MapsindoorsLocationSchema);
 const LocationsArraySchema = z.array(LocationSchema);
+
+const MappingSchema = z.record(z.string(), z.string());
+
+let ROOM_ID_MAPPINGS: Record<string, string> = {};
+
+function loadMappings(workDir: string) {
+  let roomIdMappings = MappingSchema.parse(
+    JSON.parse(
+      fs.readFileSync(
+        path.resolve(workDir, "mappings_facilities-ns-ss-arc-hive.json"),
+        "utf8"
+      )
+    )
+  );
+  const schools = ["HSS", "NBS"];
+  for (const school of schools) {
+    const mappings = MappingSchema.parse(
+      JSON.parse(
+        fs.readFileSync(
+          path.resolve(workDir, `mappings_facilities-${school}.json`),
+          "utf8"
+        )
+      )
+    );
+    for (const [roomId, venue] of Object.entries(mappings)) {
+      if (
+        roomIdMappings[roomId] !== undefined &&
+        roomIdMappings[roomId] !== venue
+      ) {
+        throw new Error(
+          `Room ID ${roomId} has multiple venues: ${roomIdMappings[roomId]} and ${venue}`
+        );
+      }
+      roomIdMappings[roomId] = venue;
+    }
+  }
+  return roomIdMappings;
+}
 
 function mapByRoomId(roomId: string) {
   const altNames: string[] = [];
@@ -36,6 +75,11 @@ function mapByRoomId(roomId: string) {
     temp.add(`ART-${removePrefixFloor0}-${removePrefixRoom0}`);
     temp.add(`ART-${removePrefixFloor0}-${room}`);
     altNames.push(...temp);
+  }
+
+  const roomIdMapping = ROOM_ID_MAPPINGS[roomId];
+  if (roomIdMapping) {
+    altNames.push(roomIdMapping);
   }
 
   return altNames;
@@ -154,15 +198,21 @@ export function mapAltNames(
 }
 
 (async () => {
+  const workDir = `${__dirname}/out`;
   // Create out directory if not exist.
-  if (!fs.existsSync(`${__dirname}/out`)) {
-    fs.mkdirSync(`${__dirname}/out`);
+  if (!fs.existsSync(workDir)) {
+    fs.mkdirSync(workDir);
   }
+  // Load room id mappings.
+  ROOM_ID_MAPPINGS = loadMappings(workDir);
+
   const categories = ALL_CATEGORIES;
   const results: ReturnType<typeof mapAltNames> = [];
   for (const category of categories) {
     const locations = MapsindoorsLocationArraySchema.parse(
-      JSON.parse(fs.readFileSync(`${__dirname}/out/${category}.json`, "utf8"))
+      JSON.parse(
+        fs.readFileSync(path.resolve(workDir, `${category}.json`), "utf8")
+      )
     );
     const mappedLocations = mapAltNames(locations, category);
     results.push(...mappedLocations);
@@ -228,7 +278,7 @@ export function mapAltNames(
   }
 
   fs.writeFileSync(
-    `${__dirname}/out/facilities-transformed.json`,
+    path.resolve(workDir, "TRANSFORMED_LOCATIONS.json"),
     JSON.stringify(results, null, 2)
   );
 })();

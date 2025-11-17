@@ -13,7 +13,7 @@ function* batchIteration(batchSize: number, total: number) {
 }
 
 async function getLocations(dir: string) {
-  const resultsPath = path.resolve(dir, "./out/facilities-transformed.json");
+  const resultsPath = path.resolve(dir, "./out/TRANSFORMED_LOCATIONS.json");
   const all = LocationSchema.array().parse(
     JSON.parse(fs.readFileSync(resultsPath, "utf8"))
   );
