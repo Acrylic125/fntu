@@ -12,6 +12,8 @@ export const FacilitySchema = z.object({
 
 export type Facility = z.infer<typeof FacilitySchema>;
 
+export const SCHOOLS_WITH_MAPPINGS = ["HSS", "NBS", "SPMS", "EEE"];
+
 function scrapeFacilitiesFromHTML(html: string): Facility[] {
   const venues: Facility[] = [];
   const $ = cheerio.load(html);
@@ -100,9 +102,8 @@ function scrapeFacilitiesFromHTML(html: string): Facility[] {
   if (!fs.existsSync(workDir)) {
     fs.mkdirSync(workDir);
   }
-  const schools = ["HSS", "NBS"];
 
-  for (const school of schools) {
+  for (const school of SCHOOLS_WITH_MAPPINGS) {
     const url = `https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=${school}`;
     const response = await fetch(url);
     const html = await response.text();
@@ -126,6 +127,9 @@ function scrapeFacilitiesFromHTML(html: string): Facility[] {
     let mappings: Record<string, string> = {};
     for (const facility of facilities) {
       mappings[facility.location] = facility.venue;
+      if (facility.location.startsWith("HSS-")) {
+        mappings[facility.location.replace("HSS-", "SHHK-")] = facility.venue;
+      }
     }
     console.log(
       `Written mappings to ${path.resolve(workDir, `mappings_facilities-${school}.json`)}`

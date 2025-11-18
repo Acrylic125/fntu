@@ -34,6 +34,8 @@ We employ Regex and direct mapping strategies sourced from NTU.
 - [North Spine/South Spine/The Arc/The Hive Facilities](https://wis.ntu.edu.sg/pls/webexe88/FBSDOCU.FBSLOCATN)
 - [HSS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=HSS)
 - [NBS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=NBS)
+- [SPMS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=SPMS)
+- [EEE](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=EEE)
 <!-- - [NBS](https://www3.ntu.edu.sg/OAS2/regn/Loc_NBS_Subjects.pdf) -->
 
 Unfortunately, this mappings are very tedious to do so due to inconsistent alternative name namings. This is only a "Best Effort", so no guarantees that a venue has a mapping!

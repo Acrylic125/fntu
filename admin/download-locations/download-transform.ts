@@ -6,6 +6,7 @@ import {
 } from "./schema";
 import { z } from "zod";
 import path from "path";
+import { SCHOOLS_WITH_MAPPINGS } from "./scrape-schools";
 
 const MapsindoorsLocationArraySchema = z.array(MapsindoorsLocationSchema);
 const LocationsArraySchema = z.array(LocationSchema);
@@ -13,6 +14,7 @@ const LocationsArraySchema = z.array(LocationSchema);
 const MappingSchema = z.record(z.string(), z.string());
 
 let ROOM_ID_MAPPINGS: Record<string, string> = {};
+let NAME_MAPPINGS: Record<string, string> = {};
 
 function loadMappings(workDir: string) {
   let roomIdMappings = MappingSchema.parse(
@@ -23,7 +25,7 @@ function loadMappings(workDir: string) {
       )
     )
   );
-  const schools = ["HSS", "NBS"];
+  const schools = SCHOOLS_WITH_MAPPINGS;
   for (const school of schools) {
     const mappings = MappingSchema.parse(
       JSON.parse(
@@ -45,7 +47,16 @@ function loadMappings(workDir: string) {
       roomIdMappings[roomId] = venue;
     }
   }
-  return roomIdMappings;
+
+  // Name mappings.
+  const nameMappings: Record<string, string> = {};
+  for (let i = 1; i <= 3; i++) {
+    nameMappings[`ICC CoILab ${i} (EMB)`] = `COLLAB ${i}`;
+    nameMappings[`Software Lab ${i} (N4)`] = `SWLAB${i}`;
+    nameMappings[`Hardware Lab ${i} (N4)`] = `HWLAB${i}`;
+  }
+
+  return { roomIdMappings, nameMappings };
 }
 
 function mapByRoomId(roomId: string) {
@@ -101,6 +112,7 @@ function mapByName(name: string) {
     ["SPMS", "SPMS"],
     ["SBS", "SBS"],
     ["HSS", "HSS"],
+    ["SHHK", "HSS"], // They are they same.
   ];
 
   for (const [building, prefix] of BUILDING_PREFIXES) {
@@ -108,8 +120,10 @@ function mapByName(name: string) {
       const [, , , room] = name.split(" ");
       if (room.length === 1) {
         altNames.push(`${prefix}-TR+0${room}`);
+        altNames.push(`${prefix} TR+0${room}`);
       }
       altNames.push(`${prefix}-TR+${room}`);
+      altNames.push(`${prefix} TR+${room}`);
     }
   }
 
@@ -163,6 +177,17 @@ function mapByName(name: string) {
     altNames.push(`${building}-SR${room}`);
   }
 
+  // Class Rooms
+  if (name.match(new RegExp(`Class Room ([0-9]+|[A-Za-z])+ \\(SBS\\)`))) {
+    const [, , room] = name.split(" ");
+    altNames.push(`SBS-CR${room}`);
+  }
+
+  const nameMapping = NAME_MAPPINGS[name];
+  if (nameMapping) {
+    altNames.push(nameMapping);
+  }
+
   return altNames;
 }
 
@@ -204,7 +229,9 @@ export function mapAltNames(
     fs.mkdirSync(workDir);
   }
   // Load room id mappings.
-  ROOM_ID_MAPPINGS = loadMappings(workDir);
+  const { roomIdMappings, nameMappings } = loadMappings(workDir);
+  ROOM_ID_MAPPINGS = roomIdMappings;
+  NAME_MAPPINGS = nameMappings;
 
   const categories = ALL_CATEGORIES;
   const results: ReturnType<typeof mapAltNames> = [];
