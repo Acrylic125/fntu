@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Your OpenAPI</title>
+    <!-- Embed elements Elements via Web Component -->
+    <script src="https://unpkg.com/@stoplight/elements/web-components.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/@stoplight/elements/styles.min.css"
+    />
+    <style>
+      /* See https://github.com/stoplightio/elements/issues/2188 */
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        background-color: var(--color-canvas);
+      }
+
+      /* issues about the dark theme of stoplight/mosaic-code-viewer using web component:
+		 * https://github.com/stoplightio/elements/issues/2188#issuecomment-1485461965
+		 */
+      [data-theme="dark"] .token.property {
+        color: rgb(128, 203, 196) !important;
+      }
+      [data-theme="dark"] .token.operator {
+        color: rgb(255, 123, 114) !important;
+      }
+      [data-theme="dark"] .token.number {
+        color: rgb(247, 140, 108) !important;
+      }
+      [data-theme="dark"] .token.string {
+        color: rgb(165, 214, 255) !important;
+      }
+      [data-theme="dark"] .token.boolean {
+        color: rgb(121, 192, 255) !important;
+      }
+      [data-theme="dark"] .token.punctuation {
+        color: #dbdbdb !important;
+      }
+    </style>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const theme = "dark";
+        if (theme) document.documentElement.setAttribute("data-theme", theme);
+
+      });
+    </script>
+  </head data-theme="dark">
+  <body>
+    <elements-api
+      apiDescriptionUrl="http://localhost:8787/openapi.json"
+      router="hash"
+      layout="sidebar"
+    />
+  </body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "api",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings"
+  },
+  "dependencies": {
+    "@clerk/backend": "^2.23.1",
+    "@hono/clerk-auth": "^3.0.3",
+    "@hono/standard-validator": "^0.2.0",
+    "@hono/swagger-ui": "^0.5.2",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "hono": "^4.10.6",
+    "hono-openapi": "^1.1.1",
+    "pg": "^8.16.3",
+    "postgres": "^3.4.7",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251121.0",
+    "@types/js-yaml": "^4.0.9",
+    "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.7",
+    "tsx": "^4.20.6",
+    "wrangler": "^4.4.0"
+  }
+}
