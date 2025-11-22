@@ -131,14 +131,12 @@ coursesRoute.get(
           "application/json": {
             schema: resolver(
               z.object({
-                course: z.object({
-                  id: z.number(),
-                  name: z.string(),
-                  code: z.string(),
-                  au: z.number(),
-                  ay: z.string(),
-                  semester: z.string(),
-                }),
+                id: z.number(),
+                name: z.string(),
+                code: z.string(),
+                au: z.number(),
+                ay: z.string(),
+                semester: z.string(),
               })
             ),
           },

@@ -1,47 +1,24 @@
 import { Hono } from "hono";
-import {
-  openAPIRouteHandler,
-  generateSpecs,
-  describeRoute,
-  resolver,
-  validator,
-  describeResponse,
-} from "hono-openapi";
+import { describeRoute, resolver, validator } from "hono-openapi";
 import { z } from "zod";
 import { programsTable } from "../db/schema";
 // import { db } from "./db";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { Pool } from "pg";
-import { and, eq, gt, gte, ilike, like } from "drizzle-orm";
+import { and, eq, gte, ilike } from "drizzle-orm";
 import { API_PARAMS } from "../open-api";
 import { getDb } from "../db";
 
 export const programsRoute = new Hono();
 
-const GetProgramsSchema = z.object({
-  search: z.string().optional(),
-  cursor: z.coerce.number().optional(),
-  limit: z.coerce.number().min(1).max(20).default(20),
-});
-
-const GetProgramsResponseSchema = z.object({
-  programs: z.array(
-    z.object({
-      id: z.number(),
-      name: z.string(),
-      code: z.string(),
-      subCode: z.string(),
-      year: z.number(),
-    })
-  ),
-  pagination: z.object({
-    nextCursor: z.string().nullable(),
-  }),
-});
-
 programsRoute.get(
   "/",
-  validator("query", GetProgramsSchema),
+  validator(
+    "query",
+    z.object({
+      search: z.string().optional(),
+      cursor: z.coerce.number().optional(),
+      limit: z.coerce.number().min(1).max(20).default(20),
+    })
+  ),
   describeRoute({
     parameters: API_PARAMS,
     responses: {
@@ -49,7 +26,22 @@ programsRoute.get(
         description: "Successful response",
         content: {
           "application/json": {
-            schema: resolver(GetProgramsResponseSchema),
+            schema: resolver(
+              z.object({
+                programs: z.array(
+                  z.object({
+                    id: z.number(),
+                    name: z.string(),
+                    code: z.string(),
+                    subCode: z.string(),
+                    year: z.number(),
+                  })
+                ),
+                pagination: z.object({
+                  nextCursor: z.string().nullable(),
+                }),
+              })
+            ),
           },
         },
       },
@@ -90,22 +82,9 @@ programsRoute.get(
   }
 );
 
-const GetProgramSchema = z.object({
-  id: z.coerce.number(),
-});
-
-const GetProgramResponseSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  code: z.string(),
-  subCode: z.string(),
-  year: z.number(),
-  type: z.string(),
-});
-
 programsRoute.get(
   "/:id",
-  validator("param", GetProgramSchema),
+  validator("param", z.object({ id: z.coerce.number() })),
   describeRoute({
     parameters: API_PARAMS,
     responses: {
@@ -113,7 +92,18 @@ programsRoute.get(
         description: "Successful response",
         content: {
           "application/json": {
-            schema: resolver(GetProgramResponseSchema),
+            schema: resolver(
+              z.object({
+                program: z.object({
+                  id: z.number(),
+                  name: z.string(),
+                  code: z.string(),
+                  subCode: z.string(),
+                  year: z.number(),
+                  type: z.string(),
+                }),
+              })
+            ),
           },
         },
       },

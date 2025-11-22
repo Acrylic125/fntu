@@ -54,101 +54,81 @@ locationsRoute.get(
   }
 );
 
-const GetLocationsSchema = z.object({
-  search: z.string().optional(),
-  category: z
-    .enum([
-      "CollegesSchoolsInstitutes",
-      "Art",
-      "BOH",
-      "AcademicFacilities",
-      "Events and Activities",
-      "ResearchCentres",
-      "Accomodations",
-      "BusStop",
-      "Handicapped Facilities",
-      "Unknown",
-      "LabsStudioWorkshops",
-      "Clinics and Childcare",
-      "MeetingRooms",
-      "Libraries",
-      "BuildingsLandmarks",
-      "Emergency",
-      "StudentsSportsRecreation",
-      "OfficesDepartments",
-      "Food and Beverages",
-      "Carparks",
-      "General",
-      "Commercials",
-    ])
-    .optional(),
-  building: z
-    .enum([
-      "S4",
-      "S3.2",
-      "N4",
-      "NMS",
-      "SRC",
-      "N4.1",
-      "S3",
-      "ADM",
-      "N1.3",
-      "SMS",
-      "S2",
-      "N2.1",
-      "S3.1",
-      "N3",
-      "TheArc",
-      "S1",
-      "N2",
-      "TheWave",
-      "THE_HIVE",
-      "SSC",
-      "N3.1",
-      "SPMS",
-      "N1.2",
-      "N1.1",
-      "HSS",
-      "RTP",
-      "SBS",
-      "ABS",
-      "S2.1",
-      "S2.2",
-      "AdminBuilding",
-      "N1",
-      "WKWSCI",
-      "N3.1A",
-      "N3.2",
-    ])
-    .optional(),
-  cursor: z.coerce.number().optional(),
-  limit: z.coerce.number().min(1).max(20).default(20),
-});
-
-const GetLocationsResponseSchema = z.object({
-  locations: z.array(
-    z.object({
-      id: z.number(),
-      name: z.string(),
-      category: z.string(),
-      building: z.string().nullable(),
-      floor: z.string(),
-      floorName: z.string(),
-      venue: z.string(),
-      type: z.string(),
-      imageUrl: z.string().nullable(),
-      mapIndoorsId: z.string(),
-      mapIndoorsRoomId: z.string().nullable(),
-    })
-  ),
-  pagination: z.object({
-    nextCursor: z.string().nullable(),
-  }),
-});
-
 locationsRoute.get(
   "/",
-  validator("query", GetLocationsSchema),
+  validator(
+    "query",
+    z.object({
+      search: z.string().optional(),
+      category: z
+        .enum([
+          "CollegesSchoolsInstitutes",
+          "Art",
+          "BOH",
+          "AcademicFacilities",
+          "Events and Activities",
+          "ResearchCentres",
+          "Accomodations",
+          "BusStop",
+          "Handicapped Facilities",
+          "Unknown",
+          "LabsStudioWorkshops",
+          "Clinics and Childcare",
+          "MeetingRooms",
+          "Libraries",
+          "BuildingsLandmarks",
+          "Emergency",
+          "StudentsSportsRecreation",
+          "OfficesDepartments",
+          "Food and Beverages",
+          "Carparks",
+          "General",
+          "Commercials",
+        ])
+        .optional(),
+      building: z
+        .enum([
+          "S4",
+          "S3.2",
+          "N4",
+          "NMS",
+          "SRC",
+          "N4.1",
+          "S3",
+          "ADM",
+          "N1.3",
+          "SMS",
+          "S2",
+          "N2.1",
+          "S3.1",
+          "N3",
+          "TheArc",
+          "S1",
+          "N2",
+          "TheWave",
+          "THE_HIVE",
+          "SSC",
+          "N3.1",
+          "SPMS",
+          "N1.2",
+          "N1.1",
+          "HSS",
+          "RTP",
+          "SBS",
+          "ABS",
+          "S2.1",
+          "S2.2",
+          "AdminBuilding",
+          "N1",
+          "WKWSCI",
+          "N3.1A",
+          "N3.2",
+        ])
+        .optional(),
+      cursor: z.coerce.number().optional(),
+      limit: z.coerce.number().min(1).max(20).default(20),
+    })
+  ),
   describeRoute({
     parameters: API_PARAMS,
     responses: {
@@ -156,7 +136,28 @@ locationsRoute.get(
         description: "Successful response",
         content: {
           "application/json": {
-            schema: resolver(GetLocationsResponseSchema),
+            schema: resolver(
+              z.object({
+                locations: z.array(
+                  z.object({
+                    id: z.number(),
+                    name: z.string(),
+                    category: z.string(),
+                    building: z.string().nullable(),
+                    floor: z.string(),
+                    floorName: z.string(),
+                    venue: z.string(),
+                    type: z.string(),
+                    imageUrl: z.string().nullable(),
+                    mapIndoorsId: z.string(),
+                    mapIndoorsRoomId: z.string().nullable(),
+                  })
+                ),
+                pagination: z.object({
+                  nextCursor: z.string().nullable(),
+                }),
+              })
+            ),
           },
         },
       },
@@ -227,27 +228,14 @@ locationsRoute.get(
   }
 );
 
-const GetLocationSchema = z.object({
-  id: z.coerce.number(),
-});
-
-const GetLocationResponseSchema = z.object({
-  id: z.number(),
-  name: z.string(),
-  category: z.string(),
-  building: z.string().nullable(),
-  floor: z.string(),
-  floorName: z.string(),
-  venue: z.string(),
-  type: z.string(),
-  imageUrl: z.string().nullable(),
-  mapIndoorsId: z.string(),
-  mapIndoorsRoomId: z.string().nullable(),
-});
-
 locationsRoute.get(
   "/:id",
-  validator("param", GetLocationSchema),
+  validator(
+    "param",
+    z.object({
+      id: z.coerce.number(),
+    })
+  ),
   describeRoute({
     parameters: API_PARAMS,
     responses: {
@@ -255,7 +243,21 @@ locationsRoute.get(
         description: "Successful response",
         content: {
           "application/json": {
-            schema: resolver(GetLocationResponseSchema),
+            schema: resolver(
+              z.object({
+                id: z.number(),
+                name: z.string(),
+                category: z.string(),
+                building: z.string().nullable(),
+                floor: z.string(),
+                floorName: z.string(),
+                venue: z.string(),
+                type: z.string(),
+                imageUrl: z.string().nullable(),
+                mapIndoorsId: z.string(),
+                mapIndoorsRoomId: z.string().nullable(),
+              })
+            ),
           },
         },
       },
