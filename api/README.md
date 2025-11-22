@@ -19,3 +19,8 @@ Pass the `CloudflareBindings` as generics when instantiation `Hono`:
 // src/index.ts
 const app = new Hono<{ Bindings: CloudflareBindings }>()
 ```
+
+Remember to set the database URL.
+```
+npx wrangler secret put DATABASE_URL
+```

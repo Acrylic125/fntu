@@ -1,17 +1,9 @@
-import { clerkMiddleware, getAuth } from "@hono/clerk-auth";
-import { HonoRequest, Hono } from "hono";
-// import { validator } from "hono/validator";
-import { z } from "zod";
-import {
-  openAPIRouteHandler,
-  generateSpecs,
-  describeRoute,
-  resolver,
-  validator,
-} from "hono-openapi";
-import { swaggerUI } from "@hono/swagger-ui";
+import { Hono } from "hono";
+import { openAPIRouteHandler } from "hono-openapi";
 import { cors } from "hono/cors";
-import { programsRoute } from "./routes";
+import { programsRoute } from "./routes/programs";
+import { locationsRoute } from "./routes/locations";
+import { coursesRoute } from "./routes/course";
 
 export interface Env {
   SIMPLE_RATE_LIMITER: any;
@@ -28,6 +20,8 @@ app.use("*", cors());
 
 const apiRoute = new Hono();
 apiRoute.route("/programs", programsRoute);
+apiRoute.route("/locations", locationsRoute);
+apiRoute.route("/courses", coursesRoute);
 app.route("/api", apiRoute);
 
 app.get(

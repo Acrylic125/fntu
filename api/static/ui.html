@@ -45,6 +45,19 @@
       [data-theme="dark"] .token.punctuation {
         color: #dbdbdb !important;
       }
+
+      [data-theme="dark"] .sl-text-danger-light {
+        color: oklch(70.4% 0.191 22.216) !important;
+      }
+      [data-theme="dark"] .sl-border-danger {
+        border-color: oklch(70.4% 0.191 22.216) !important;
+      }
+      [data-theme="dark"] .focus:sl-border-danger-dark {
+        color: oklch(70.4% 0.191 22.216) !important;
+      }
+      [data-theme="dark"] .sl-text-warning {
+        color: oklch(82.8% 0.189 84.429) !important;
+      }
     </style>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
@@ -55,6 +68,11 @@
     </script>
   </head data-theme="dark">
   <body>
+    <!-- <elements-api
+      apiDescriptionUrl="https://fntu-api.benapps.workers.dev/openapi.json"
+      router="hash"
+      layout="sidebar"
+    /> -->
     <elements-api
       apiDescriptionUrl="http://localhost:8787/openapi.json"
       router="hash"
