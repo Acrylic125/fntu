@@ -1,0 +1,26 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
+# Playground 
+
+The playground is an API reference for the data available.
+
+In order to use it, 
+1. Sign up for an account.
+1. Go to [API Keys](/dashboard/api-keys), and create a new API key.
+1. Go to [API Playground](https://fntu-api.benapps.workers.dev/), go to any route, and paste in the API key in the `Authorization` field.
+
+You can also try it on the Command Line. Try it out, remember to replace `<API_KEY>` with your actual API key:
+```bash
+curl -X GET "https://fntu-api.benapps.workers.dev/api/classes" \
+-H "Authorization: <API_KEY>"
+```
+
+<Alert variant="warning" className="flex flex-col gap-2 not-prose">
+  <AlertTitle className="text-sm md:text-base lg:text-lg">Heads up!</AlertTitle>
+  <AlertDescription className="text-xs md:text-sm lg:text-base">
+    Each user is limited to 10 requests per minute, across all API keys. We suggest only using this for experimenting. If you need more, please self-host it.
+  </AlertDescription>
+</Alert>
+
+## References
+The code can be found [here](https://github.com/Acrylic125/fntu/tree/main/api). To host it, please refer to [Hosting the Playground](/docs/hosting).

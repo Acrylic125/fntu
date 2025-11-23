@@ -1,0 +1,65 @@
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+
+# Getting Started
+
+The project distills NTU's data into a structured format, and makes it easy to use in your projects.
+
+There are 3 ways to access the data:
+  <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="w-8">#</TableHead>
+          <TableHead>Method</TableHead>
+          <TableHead>Use Cases</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+            <TableCell className="font-medium w-8">
+            1
+            </TableCell>
+            <TableCell>
+            [API Playground](/docs/playground)
+            </TableCell>
+            <TableCell>
+            - Explore what data is available.
+            - Use as a reference for your own projects.
+            - Hack up prototypes.
+            </TableCell>
+        </TableRow>
+        <TableRow>
+            <TableCell className="font-medium w-8">
+            2
+            </TableCell>
+            <TableCell>
+            [Download the Data](/docs/load-into-database)
+            </TableCell>
+            <TableCell>
+            - Analyze the raw data.
+            - Manage the data to meet your needs.
+            - Hack up prototypes, giving flexibility to querying.
+            </TableCell>
+        </TableRow>
+        <TableRow>
+            <TableCell className="font-medium w-8">
+            3
+            </TableCell>
+            <TableCell>
+            [Scrape the Data](/docs/scrape)
+            </TableCell>
+            <TableCell>
+            - Add/Modify fields to the raw data.
+            - Postprocess the data to meet your needs.
+            </TableCell>
+        </TableRow>
+    </TableBody>
+</Table>

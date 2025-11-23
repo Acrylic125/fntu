@@ -1,0 +1,48 @@
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
+# Hosting the Playground
+
+There are 2 ways to host the playground:
+1. Cloudflare Workers (Recommended for general prortotyping / production)
+2. NodeJS (Recommended for beginners)
+
+We deployed [API Playground](https://fntu-api.benapps.workers.dev/) on Cloudflare Workers.
+
+## Prerequisites
+- Have [NodeJS](https://nodejs.org/en/download/), [pnpm](https://pnpm.io/installation), and [Git](https://git-scm.com/downloads) installed.
+- Load the data into a PostgreSQL database. [Read More](/docs/load-into-database)
+- Clone the [FNTU](https://github.com/Acrylic125/fntu) repository. Run `git clone git@github.com:Acrylic125/fntu.git` then `cd api`.
+
+Once cloned, 
+1. Copy `.env.example` and name it `.env`. Configure it based on the instructions in `.env`.
+1. Run `pnpm dev` to run a local dev environment.
+
+## Cloudflare Workers
+### Additional Prerequisites
+- Have a [Cloudflare](https://www.cloudflare.com/) account.
+
+### Architecture
+![Alt Text](/playground-architecture.png "Architecture")
+The project uses:
+- Cloudflare Workers to host/run the API.
+- Worker KV to store user generated API Keys.
+- PostgreSQL (Any PostgreSQL provider works)
+
+### Steps
+Run the following commands:
+```bash
+# Create KV namespace, fntu_api_kv
+npx wrangler kv namespace create fntu_api_kv
+
+# Add database URL secret. Paste in the DB URL.
+npx wrangler secret put DATABASE_URL
+
+# Add API Key Secret for signing API Keys
+# 1. Generate a secret. Use a different secret than the one you used for .env.
+openssl rand -hex 32 
+# 2. Add API KEY SECRET. Paste the generated string from (1).
+npx wrangler secret put API_KEY_JWT_SECRET
+```
+
+To test the deployment, run `pnpm dev`.
+To deploy, run `pnpm run deploy`.
