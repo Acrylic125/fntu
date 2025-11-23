@@ -5,7 +5,7 @@ type ParametersObject = DescribeRouteParam1["parameters"];
 
 export const API_PARAMS: ParametersObject = [
   {
-    name: "X-API-Key",
+    name: "Authorization",
     in: "header",
     required: true,
     description:

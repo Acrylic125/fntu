@@ -26,6 +26,12 @@
     "directory": "./static",
     "binding": "ASSETS",
   },
+  "kv_namespaces": [
+    {
+      "binding": "fntu_api_kv",
+      "id": "7370896460284f078d21c3397e1af025",
+    },
+  ],
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
