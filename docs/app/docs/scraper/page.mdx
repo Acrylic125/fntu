@@ -1,8 +1,68 @@
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import {
+    Table,
+    TableBody,
+    TableCaption,
+    TableCell,
+    TableFooter,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
 
 # Scraper 
 
-We have 
+Tool to scrape data and distill it. 
 
-This section describes how we scrape the data and how you might modify it to meet your needs.
+The code can be found [here](https://github.com/Acrylic125/fntu/tree/main/scraper).
 
+## High level overview 
+1. **Source** the data we want to scrape. See **Data Sources** for more details.
+1. **Download** the pages (i.e. **Data Sources**).
+1. **Scrape** the data from the pages, and consolidate it. (In JSON format)
+1. (Optional) **Transform** the data, and consolidate it. (In JSON format)
+1. (Optional) **Insert** the data into a database. (Using Drizzle ORM)
+
+You may modify any of these steps to fit your needs.
+
+## Data Sources
+Data sources are the pages we want to scrape from.
+
+<Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Use</TableHead>
+          <TableHead>Data Sources</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+            <TableCell>
+            Courses
+            </TableCell>
+            <TableCell>
+            - [Undergraduate Programs](https://wish.wis.ntu.edu.sg/webexe/owa/aus_schedule.main)
+            </TableCell>
+        </TableRow>
+        <TableRow>
+            <TableCell>
+            Locations
+            </TableCell>
+            <TableCell>
+            Sourcing main locations.
+            - [Mapsindoors Categories](https://api.mapsindoors.com/ntuprod/api/categories)
+            - [Mapsindoors Academic Facilities](https://api.mapsindoors.com/ntuprod/api/locations?venue=NTU&categories=AcademicFacilities&take=1000&skip=0&orderBy=relevance&extendedLocations=true&lr=en-US)
+            - [Mapsindoors Labs/Workshops](https://api.mapsindoors.com/ntuprod/api/locations?venue=NTU&categories=LabsStudioWorkshops&take=1000&skip=0&orderBy=relevance&extendedLocations=true&lr=en-US)
+
+            <div className='max-w-xl text-wrap'>
+            We have to link the names used in undergraduate programsto the names used in MapIndoors. Thus, we add **Altername Names (altNames)** to each location. We source `altNames` from:
+            - [North Spine/South Spine/The Arc/The Hive Facilities](https://wis.ntu.edu.sg/pls/webexe88/FBSDOCU.FBSLOCATN)
+            - [HSS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=HSS)
+            - [NBS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=NBS)
+            - [SPMS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=SPMS)
+            - [EEE](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=EEE)
+            </div>
+            
+            </TableCell>
+        </TableRow>
+    </TableBody>
+</Table>

@@ -75,7 +75,7 @@ export default function DocsLayout({
           </div>
         </ScrollArea>
         <ScrollArea className="flex-1 w-full h-[calc(100vh-64px)]">
-          <div className="p-4 md:px-8 flex flex-col items-center">
+          <div className="p-4 pb-72 md:px-8 flex flex-col items-center">
             <div className="max-w-7xl w-full prose prose-sm md:prose-base lg:prose-lg prose-neutral dark:prose-invert">
               {children}
             </div>
