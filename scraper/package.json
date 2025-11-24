@@ -27,6 +27,7 @@
     "dotenv": "^17.2.0",
     "drizzle-orm": "^0.44.2",
     "inquirer": "^13.0.1",
+    "pg-connection-string": "^2.9.1",
     "postgres": "^3.4.7",
     "seedrandom": "^3.0.5",
     "ts-node": "^10.9.2",

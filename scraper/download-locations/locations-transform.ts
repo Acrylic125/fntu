@@ -1,6 +1,7 @@
 import fs from "fs";
 import {
   ALL_CATEGORIES,
+  CategoriesMetadataSchema,
   LocationSchema,
   MapsindoorsLocationSchema,
 } from "./schema";
@@ -13,43 +14,17 @@ const LocationsArraySchema = z.array(LocationSchema);
 
 const MappingSchema = z.record(z.string(), z.string());
 
-let ROOM_ID_MAPPINGS: Record<string, string> = {};
-let NAME_MAPPINGS: Record<string, string> = {};
-
-function loadMappings(workDir: string) {
-  let roomIdMappings = MappingSchema.parse(
-    JSON.parse(
-      fs.readFileSync(
-        path.resolve(workDir, "mappings_facilities-ns-ss-arc-hive.json"),
-        "utf8"
-      )
-    )
+function loadMappings(options: {
+  roomIdMappingsPath: string;
+  nameMappingsPath: string;
+}) {
+  const roomIdMappings = MappingSchema.parse(
+    JSON.parse(fs.readFileSync(options.roomIdMappingsPath, "utf8"))
   );
-  const schools = SCHOOLS_WITH_MAPPINGS;
-  for (const school of schools) {
-    const mappings = MappingSchema.parse(
-      JSON.parse(
-        fs.readFileSync(
-          path.resolve(workDir, `mappings_facilities-${school}.json`),
-          "utf8"
-        )
-      )
-    );
-    for (const [roomId, venue] of Object.entries(mappings)) {
-      if (
-        roomIdMappings[roomId] !== undefined &&
-        roomIdMappings[roomId] !== venue
-      ) {
-        throw new Error(
-          `Room ID ${roomId} has multiple venues: ${roomIdMappings[roomId]} and ${venue}`
-        );
-      }
-      roomIdMappings[roomId] = venue;
-    }
-  }
-
+  const nameMappings = MappingSchema.parse(
+    JSON.parse(fs.readFileSync(options.nameMappingsPath, "utf8"))
+  );
   // Name mappings.
-  const nameMappings: Record<string, string> = {};
   for (let i = 1; i <= 3; i++) {
     nameMappings[`ICC CoILab ${i} (EMB)`] = `COLLAB ${i}`;
     nameMappings[`Software Lab ${i} (N4)`] = `SWLAB${i}`;
@@ -59,7 +34,7 @@ function loadMappings(workDir: string) {
   return { roomIdMappings, nameMappings };
 }
 
-function mapByRoomId(roomId: string) {
+function mapByRoomId(roomId: string, mappings: Record<string, string>) {
   const altNames: string[] = [];
   // ABS-0[1-3]-LT${i}$ -> ABS LT[1-10]
   for (let i = 1; i <= 20; i++) {
@@ -88,7 +63,7 @@ function mapByRoomId(roomId: string) {
     altNames.push(...temp);
   }
 
-  const roomIdMapping = ROOM_ID_MAPPINGS[roomId];
+  const roomIdMapping = mappings[roomId];
   if (roomIdMapping) {
     altNames.push(roomIdMapping);
   }
@@ -96,7 +71,7 @@ function mapByRoomId(roomId: string) {
   return altNames;
 }
 
-function mapByName(name: string) {
+function mapByName(name: string, mappings: Record<string, string>) {
   const altNames: string[] = [];
   // NS and SS TRs
   if (
@@ -183,7 +158,7 @@ function mapByName(name: string) {
     altNames.push(`SBS-CR${room}`);
   }
 
-  const nameMapping = NAME_MAPPINGS[name];
+  const nameMapping = mappings[name];
   if (nameMapping) {
     altNames.push(nameMapping);
   }
@@ -193,15 +168,17 @@ function mapByName(name: string) {
 
 export function mapAltNames(
   locations: z.infer<typeof MapsindoorsLocationArraySchema>,
-  category: (typeof ALL_CATEGORIES)[number]
+  category: (typeof ALL_CATEGORIES)[number],
+  roomIdMappings: Record<string, string>,
+  nameMappings: Record<string, string>
 ): z.infer<typeof LocationsArraySchema> {
   return locations.map((location) => {
     const altNames: string[] = [];
     if (location.properties.roomId) {
       altNames.push(location.properties.roomId);
-      altNames.push(...mapByRoomId(location.properties.roomId));
+      altNames.push(...mapByRoomId(location.properties.roomId, roomIdMappings));
     }
-    altNames.push(...mapByName(location.properties.name));
+    altNames.push(...mapByName(location.properties.name, nameMappings));
     return {
       category: category,
       name: location.properties.name,
@@ -222,26 +199,34 @@ export function mapAltNames(
   });
 }
 
-(async () => {
-  const workDir = `${__dirname}/out`;
-  // Create out directory if not exist.
-  if (!fs.existsSync(workDir)) {
-    fs.mkdirSync(workDir);
+export async function transformLocations(
+  metadataPath: string,
+  transformedLocationsPath: string,
+  options: {
+    roomIdMappingsPath: string;
+    nameMappingsPath: string;
   }
+) {
   // Load room id mappings.
-  const { roomIdMappings, nameMappings } = loadMappings(workDir);
-  ROOM_ID_MAPPINGS = roomIdMappings;
-  NAME_MAPPINGS = nameMappings;
+  const { roomIdMappings, nameMappings } = loadMappings(options);
 
-  const categories = ALL_CATEGORIES;
+  // Load metadata.
+  const metadata = CategoriesMetadataSchema.parse(
+    JSON.parse(fs.readFileSync(metadataPath, "utf8"))
+  );
+
   const results: ReturnType<typeof mapAltNames> = [];
-  for (const category of categories) {
+
+  for (const categoryMetadata of metadata) {
     const locations = MapsindoorsLocationArraySchema.parse(
-      JSON.parse(
-        fs.readFileSync(path.resolve(workDir, `${category}.json`), "utf8")
-      )
+      JSON.parse(fs.readFileSync(categoryMetadata.path, "utf8"))
     );
-    const mappedLocations = mapAltNames(locations, category);
+    const mappedLocations = mapAltNames(
+      locations,
+      categoryMetadata.key,
+      roomIdMappings,
+      nameMappings
+    );
     results.push(...mappedLocations);
   }
 
@@ -304,8 +289,5 @@ export function mapAltNames(
     }
   }
 
-  fs.writeFileSync(
-    path.resolve(workDir, "TRANSFORMED_LOCATIONS.json"),
-    JSON.stringify(results, null, 2)
-  );
-})();
+  fs.writeFileSync(transformedLocationsPath, JSON.stringify(results, null, 2));
+}

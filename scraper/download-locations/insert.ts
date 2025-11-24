@@ -1,8 +1,14 @@
 import path from "path";
 import fs from "fs";
 import { LocationSchema } from "./schema";
-import { locationAltNamesTable, locationsTable } from "../db/schema";
-import { db } from "../db";
+import {
+  locationAltNamesTable,
+  locationGeometryTable,
+  locationsTable,
+} from "../db/schema";
+import { getDb } from "../db";
+
+type Db = ReturnType<typeof getDb>;
 
 function* batchIteration(batchSize: number, total: number) {
   for (let i = 0; i < total; i += batchSize) {
@@ -12,17 +18,17 @@ function* batchIteration(batchSize: number, total: number) {
   }
 }
 
-async function getLocations(dir: string) {
-  const resultsPath = path.resolve(dir, "./out/TRANSFORMED_LOCATIONS.json");
+async function getLocations(filePath: string) {
   const all = LocationSchema.array().parse(
-    JSON.parse(fs.readFileSync(resultsPath, "utf8"))
+    JSON.parse(fs.readFileSync(filePath, "utf8"))
   );
   return all;
 }
 
-async function doInsertLocations() {
-  const all = await getLocations(__dirname);
-
+async function doInsertLocations(
+  db: Db,
+  all: Awaited<ReturnType<typeof getLocations>>
+) {
   try {
     for (const { batch, end } of batchIteration(1000, all.length)) {
       await db.insert(locationsTable).values(
@@ -46,9 +52,10 @@ async function doInsertLocations() {
   console.log("Locations inserted");
 }
 
-async function doInsertLocationAltNames() {
-  const all = await getLocations(__dirname);
-
+async function doInsertLocationAltNames(
+  db: Db,
+  all: Awaited<ReturnType<typeof getLocations>>
+) {
   const locations = await db.select().from(locationsTable);
   // Name to id mapping
   const nameToIdMap = new Map<string, number>();
@@ -76,7 +83,84 @@ async function doInsertLocationAltNames() {
   console.log("Locations Alt names inserted");
 }
 
-(async () => {
-  await doInsertLocations();
-  await doInsertLocationAltNames();
-})();
+async function doInsertLocationGeometry(
+  db: Db,
+  all: Awaited<ReturnType<typeof getLocations>>
+) {
+  const locations = await db.select().from(locationsTable);
+  const locationToIdMap = new Map<string, number>();
+  for (const location of locations) {
+    locationToIdMap.set(location.name, location.id);
+  }
+
+  const toInsert = [];
+  for (const location of all) {
+    if (location.geometry.type === "Point") {
+      const longitude = location.geometry.coordinates[0];
+      const latitude = location.geometry.coordinates[1];
+      toInsert.push({
+        locationId: locationToIdMap.get(location.name)!,
+        longitude,
+        latitude,
+        order: 0,
+      });
+    } else if (location.geometry.type === "Polygon") {
+      let order = 0;
+      for (let i = 0; i < location.geometry.coordinates.length; i++) {
+        const coordinate = location.geometry.coordinates[i];
+        for (let j = 0; j < coordinate.length; j++) {
+          const longitude = coordinate[j][0];
+          const latitude = coordinate[j][1];
+          toInsert.push({
+            locationId: locationToIdMap.get(location.name)!,
+            longitude,
+            latitude,
+            order,
+          });
+          order++;
+        }
+      }
+    }
+  }
+
+  try {
+    for (const { batch, end } of batchIteration(1000, toInsert.length)) {
+      await db.insert(locationGeometryTable).values(
+        toInsert.slice(batch, end).map((t) => ({
+          locationId: t.locationId,
+          order: t.order,
+          longitude: t.longitude,
+          latitude: t.latitude,
+        }))
+      );
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  console.log("Locations Geometry inserted");
+}
+
+export const LOCATIONS_INSERTION_OPTIONS = [
+  "Locations",
+  "Locations Alt Names",
+  "Locations Geometry",
+] as const;
+
+export async function insertLocations(
+  db: Db,
+  options: {
+    locationsTransformPath: string;
+    options: (typeof LOCATIONS_INSERTION_OPTIONS)[number][];
+  }
+) {
+  const all = await getLocations(options.locationsTransformPath);
+  if (options.options.includes("Locations")) {
+    await doInsertLocations(db, all);
+  }
+  if (options.options.includes("Locations Alt Names")) {
+    await doInsertLocationAltNames(db, all);
+  }
+  if (options.options.includes("Locations Geometry")) {
+    await doInsertLocationGeometry(db, all);
+  }
+}

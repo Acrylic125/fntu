@@ -141,13 +141,10 @@ function transformFacility(facility: Facility): Facility {
   return { ...facility, location, locationRemarks };
 }
 
-// Main execution
-(async () => {
-  const workDir = `${__dirname}/out`;
-  if (!fs.existsSync(workDir)) {
-    fs.mkdirSync(workDir);
-  }
-
+export async function scrapeNSSSArcHiveFacilities(
+  outputDir: string,
+  mappingsPath: string
+) {
   const url = "https://wis.ntu.edu.sg/pls/webexe88/FBSDOCU.FBSLOCATN";
   const response = await fetch(url);
   const html = await response.text();
@@ -155,17 +152,16 @@ function transformFacility(facility: Facility): Facility {
   console.log("Writing HTML to file...");
   // Only used for a reference.
   fs.writeFileSync(
-    path.resolve(workDir, "mappings-raw_scrape-ns-ss-arc-hive-facilities.html"),
+    path.resolve(
+      outputDir,
+      "mappings-raw_scrape-ns-ss-arc-hive-facilities.html"
+    ),
     html
   );
 
   const rawOutputPath = path.resolve(
-    workDir,
+    outputDir,
     "mappings-raw_facilities-ns-ss-arc-hive.json"
-  );
-  const mappingsOutputPath = path.resolve(
-    workDir,
-    "mappings_facilities-ns-ss-arc-hive.json"
   );
 
   console.log("Scraping facilities data...");
@@ -187,7 +183,5 @@ function transformFacility(facility: Facility): Facility {
   for (const facility of transformedFacilities) {
     mappings[facility.location] = facility.venue;
   }
-  fs.writeFileSync(mappingsOutputPath, JSON.stringify(mappings, null, 2));
-
-  console.log(`Mappings data written to ${mappingsOutputPath}`);
-})();
+  fs.writeFileSync(mappingsPath, JSON.stringify(mappings, null, 2));
+}

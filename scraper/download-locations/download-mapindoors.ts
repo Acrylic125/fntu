@@ -1,6 +1,11 @@
 import fs from "fs";
-import { ALL_CATEGORIES, MapsindoorsLocationSchema } from "./schema";
+import {
+  ALL_CATEGORIES,
+  CategoriesMetadataSchema,
+  MapsindoorsLocationSchema,
+} from "./schema";
 import { z } from "zod";
+import path from "path";
 
 const CategoriesPayload = z
   .object({
@@ -121,21 +126,24 @@ export async function downloadFacilities(category: string) {
   return locations;
 }
 
-(async () => {
-  // Create out directory if not exist.
-  if (!fs.existsSync(`${__dirname}/out`)) {
-    fs.mkdirSync(`${__dirname}/out`);
-  }
+export async function downloadMapIndoors(
+  outputDir: string,
+  metadataPath: string
+) {
   const categories = await downloadAllCategories();
   const categoriesArray = categories.map((category) => category.key);
-  console.log(categoriesArray.length);
-  console.log(categoriesArray);
-  // const categories = ALL_CATEGORIES;
+  const categoriesMetadata: z.infer<typeof CategoriesMetadataSchema> = [];
   for (const category of categoriesArray) {
+    if (!ALL_CATEGORIES.includes(category as (typeof ALL_CATEGORIES)[number])) {
+      continue;
+    }
     const locations = await downloadFacilities(category.replace(" ", "+"));
-    fs.writeFileSync(
-      `${__dirname}/out/${category}.json`,
-      JSON.stringify(locations, null, 2)
-    );
+    const categoryPath = path.resolve(outputDir, `${category}.json`);
+    fs.writeFileSync(categoryPath, JSON.stringify(locations, null, 2));
+    categoriesMetadata.push({
+      key: category as (typeof ALL_CATEGORIES)[number],
+      path: categoryPath,
+    });
   }
-})();
+  fs.writeFileSync(metadataPath, JSON.stringify(categoriesMetadata, null, 2));
+}

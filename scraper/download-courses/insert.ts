@@ -2,6 +2,7 @@ import {
   ProgramCourseListSchema as ClassesSchema,
   MetadataSchema,
   Days,
+  ProgramSourceSchema,
 } from "../schema";
 import {
   courseIndexClassesTable,
@@ -18,11 +19,11 @@ import { getDb } from "../db";
 
 type Db = ReturnType<typeof getDb>;
 
-async function getMetadata(filepath: string) {
-  const metadata = MetadataSchema.parse(
+async function getPrograms(filepath: string) {
+  const programs = ProgramSourceSchema.array().parse(
     JSON.parse(fs.readFileSync(filepath, "utf8"))
   );
-  return metadata;
+  return programs;
 }
 
 async function getScrapedResults(filepath: string) {
@@ -42,9 +43,8 @@ function* batchIteration(batchSize: number, total: number) {
 
 async function doProgramsInsert(
   db: Db,
-  metadata: Awaited<ReturnType<typeof getMetadata>>
+  programs: Awaited<ReturnType<typeof getPrograms>>
 ) {
-  const programs = metadata.map((m) => m.source);
   const alreadyInsertedPrograms = await db
     .select({
       code: programsTable.code,
@@ -264,17 +264,17 @@ export const COURSE_INSERTION_OPTIONS = [
   "Index Sources",
 ] as const;
 
-export async function doInsert(
+export async function insertCourses(
   db: Db,
   ay: string,
   semester: string,
   options: {
-    schedulesMetadataPath: string;
+    programsPath: string;
     allSchedulesPath: string;
     options: (typeof COURSE_INSERTION_OPTIONS)[number][];
   }
 ) {
-  const metadata = await getMetadata(options.schedulesMetadataPath);
+  const metadata = await getPrograms(options.programsPath);
   const all = await getScrapedResults(options.allSchedulesPath);
   const successOptions = [];
   try {

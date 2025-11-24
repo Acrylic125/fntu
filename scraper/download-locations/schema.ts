@@ -87,3 +87,10 @@ export const LocationSchema = z.object({
     roomId: z.string().nullable(),
   }),
 });
+
+export const CategoriesMetadataSchema = z
+  .object({
+    key: z.enum(ALL_CATEGORIES),
+    path: z.string(),
+  })
+  .array();

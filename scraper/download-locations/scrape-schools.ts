@@ -97,46 +97,39 @@ function scrapeFacilitiesFromHTML(html: string): Facility[] {
   return venues;
 }
 
-(async () => {
-  const workDir = `${__dirname}/out`;
-  if (!fs.existsSync(workDir)) {
-    fs.mkdirSync(workDir);
-  }
-
+export async function scrapeSchoolsFacilitiesMappings(
+  outputDir: string,
+  mappingsPath: string
+) {
+  const mappings: Record<string, string> = {};
   for (const school of SCHOOLS_WITH_MAPPINGS) {
     const url = `https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=${school}`;
     const response = await fetch(url);
     const html = await response.text();
     console.log(
-      `Written HTML to ${path.resolve(workDir, `mappings-raw_facilities-${school}.html`)}`
+      `Written HTML to ${path.resolve(outputDir, `mappings-raw_facilities-${school}.html`)}`
     );
     fs.writeFileSync(
-      path.resolve(workDir, `mappings-raw_facilities-${school}.html`),
+      path.resolve(outputDir, `mappings-raw_facilities-${school}.html`),
       html
     );
 
     const facilities = scrapeFacilitiesFromHTML(html);
     console.log(
-      `Written facilities to ${path.resolve(workDir, `mappings-raw_facilities-${school}.json`)}`
+      `Written facilities to ${path.resolve(outputDir, `mappings-raw_facilities-${school}.json`)}`
     );
     fs.writeFileSync(
-      path.resolve(workDir, `mappings-raw_facilities-${school}.json`),
+      path.resolve(outputDir, `mappings-raw_facilities-${school}.json`),
       JSON.stringify(facilities, null, 2)
     );
 
-    let mappings: Record<string, string> = {};
+    // let mappings: Record<string, string> = {};
     for (const facility of facilities) {
       mappings[facility.location] = facility.venue;
       if (facility.location.startsWith("HSS-")) {
         mappings[facility.location.replace("HSS-", "SHHK-")] = facility.venue;
       }
     }
-    console.log(
-      `Written mappings to ${path.resolve(workDir, `mappings_facilities-${school}.json`)}`
-    );
-    fs.writeFileSync(
-      path.resolve(workDir, `mappings_facilities-${school}.json`),
-      JSON.stringify(mappings, null, 2)
-    );
   }
-})();
+  fs.writeFileSync(mappingsPath, JSON.stringify(mappings, null, 2));
+}

@@ -157,13 +157,19 @@ export const locationAltNamesTable = pgTable(
   (t) => [index("idx_location_alt_names_altName").on(t.altName)]
 );
 
-export const locationGeometryTable = pgTable("location_geometry", {
-  id: serial().notNull().primaryKey(),
-  locationId: integer()
-    .notNull()
-    .references(() => locationsTable.id, { onDelete: "cascade" }),
-  // Low means first, high means last.
-  order: integer().notNull(),
-  longitude: real().notNull(),
-  latitude: real().notNull(),
-});
+export const locationGeometryTable = pgTable(
+  "location_geometry",
+  {
+    id: serial().notNull().primaryKey(),
+    locationId: integer()
+      .notNull()
+      .references(() => locationsTable.id, { onDelete: "cascade" }),
+    // Low means first, high means last.
+    order: integer().notNull(),
+    longitude: real().notNull(),
+    latitude: real().notNull(),
+  },
+  (t) => [
+    unique("idx_location_geometry_locationId_order").on(t.locationId, t.order),
+  ]
+);
