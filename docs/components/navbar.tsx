@@ -26,10 +26,7 @@ export function MainNavbar() {
         <div className="lg:hidden flex flex-row items-center gap-2">
           <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
-              <Button
-                variant="secondary"
-                className="lg:hidden absolute top-4 left-4"
-              >
+              <Button variant="secondary" className="lg:hidden">
                 <MenuIcon />
               </Button>
             </SheetTrigger>

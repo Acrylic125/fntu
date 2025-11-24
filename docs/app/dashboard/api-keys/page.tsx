@@ -5,13 +5,18 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { RedirectToSignUp } from "@clerk/nextjs";
 
 export default async function APIKeysPage() {
   // Validate the user is logged in
   const { userId } = await auth();
   if (!userId) {
-    redirect("/sign-in");
+    return (
+      <div className="flex flex-col gap-4">
+        <RedirectToSignUp />
+      </div>
+    );
+    // redirect("/sign-in");
   }
   return (
     <div className="flex flex-col gap-4">
