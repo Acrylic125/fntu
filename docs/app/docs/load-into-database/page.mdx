@@ -109,18 +109,9 @@ pnpm drizzle-kit push
   </AlertDescription>
 </Alert>
 
+Go [Download the Data](https://github.com/Acrylic125/fntu/releases/tag/24-11-2025), unzip it, and put the unzipped `download` folder somewhere.
+
 Then, run the insertion script.
 ```bash
-pnpm ts-node insert.ts
+pnpm run start insert /path/to/download
 ```
-
-{/* ### Using Docker
-```bash
-docker run -d \
-  --name fntu-postgres \
-  -e POSTGRES_PASSWORD=mysecretpassword \
-  -e POSTGRES_USER=myuser \
-  -e POSTGRES_DB=mydb \
-  -p 5432:5432 \
-  postgres:16
-``` */}
