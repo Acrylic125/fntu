@@ -32,6 +32,12 @@
       "id": "7370896460284f078d21c3397e1af025",
     },
   ],
+  "routes": [
+    {
+      "pattern": "fntu-api.benapps.dev",
+      "custom_domain": true,
+    },
+  ],
   // "compatibility_flags": [
   //   "nodejs_compat"
   // ],
