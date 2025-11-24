@@ -3,6 +3,7 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import { z } from "@hono/zod-openapi";
 import {
   locationAltNamesTable,
+  locationGeometryTable,
   locationsTable,
   programsTable,
 } from "../db/schema";
@@ -296,5 +297,31 @@ locationsRoute.get(
       ...location[0],
       altNames: altNames.map((altName) => altName.altName),
     });
+  }
+);
+
+locationsRoute.get(
+  "/:id/geometry",
+  validator("param", z.object({ id: z.coerce.number() })),
+  describeRoute({
+    parameters: API_PARAMS,
+    responses: {
+      200: {
+        description: "Successful response",
+      },
+    },
+  }),
+  async (c) => {
+    const params = c.req.valid("param");
+    const geometry = await getDb()
+      .select({
+        longitude: locationGeometryTable.longitude,
+        latitude: locationGeometryTable.latitude,
+        order: locationGeometryTable.order,
+      })
+      .from(locationGeometryTable)
+      .where(eq(locationGeometryTable.locationId, params.id))
+      .orderBy(locationGeometryTable.order);
+    return c.json(geometry);
   }
 );
