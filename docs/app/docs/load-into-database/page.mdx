@@ -1,0 +1,126 @@
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+
+# Load into Database
+
+Out of the box, we support loading the data into a PostgreSQL database.
+
+**Note:**
+You can always load it into another database, in which case, you need to modify the code to support your database. You can checkout:
+- [Drizzle ORM](https://orm.drizzle.team/docs/get-started)
+- [scraper/db/index.ts](https://github.com/Acrylic125/fntu/blob/main/scraper/db/index.ts)
+- [scraper/db/schema.ts](https://github.com/Acrylic125/fntu/blob/main/scraper/db/schema.ts)
+
+## Prerequisites
+- Have [NodeJS](https://nodejs.org/en/download/), [pnpm](https://pnpm.io/installation), and [Git](https://git-scm.com/downloads) installed.
+- Clone the [FNTU](https://github.com/Acrylic125/fntu) repository. Run `git clone git@github.com:Acrylic125/fntu.git` then `cd scraper` and `pnpm i`.
+- Have a database ready. Refer to the **PostgreSQL Setup** section below.
+
+## PostgreSQL Setup
+Below we have some recommended ways to setup a PostgreSQL database.
+<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0">
+      <TableHeader>
+        <TableRow>
+          <TableHead colSpan={1}>Method</TableHead>
+          <TableHead colSpan={4}>Steps</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+            <TableCell colSpan={1}>
+            [Local PostgreSQL](https://www.postgresql.org/download/)
+            </TableCell>
+            <TableCell colSpan={4}>
+            <div className='max-w-3xl text-wrap'>
+            Refer to this [Guide](https://www.codecademy.com/article/installing-and-using-postgresql-locally)
+            </div>
+            </TableCell>
+        </TableRow>
+        <TableRow>
+            <TableCell colSpan={1}>
+            [Docker](https://www.docker.com/)
+            </TableCell>
+            <TableCell colSpan={4}>
+            <div className='max-w-3xl text-wrap'>
+            For a local setup,
+            - Run `docker run -d --name fntu-postgres -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=myuser -e POSTGRES_DB=fntu-db -p 5432:5432 postgres:16`
+            - Try it out with `docker exec -it fntu-postgres psql -U myuser -d fntu-db`
+
+            Your `DATABASE_URL` should be `postgresql://myuser:mysecretpassword@localhost:5432/fntu-db`
+
+            Optional, but we recommend setting up [Docker Compose](https://docs.docker.com/compose/), with a mounted volume.
+            ```yaml
+            version: '3'
+            services:
+              fntu-postgres:
+                image: postgres:16
+                environment:
+                  POSTGRES_PASSWORD: mysecretpassword
+                  POSTGRES_USER: myuser
+                  POSTGRES_DB: fntu-db
+                ports:
+                  - 5432:5432
+                volumes:
+                  - ./data:/var/lib/postgresql/data
+            ```
+            Run `docker compose up -d` to start the database.
+            </div>
+            </TableCell>
+        </TableRow>
+        <TableRow>
+            <TableCell colSpan={1}>
+            [Supabase](https://supabase.com/)
+            </TableCell>
+            <TableCell colSpan={4}>
+            <div className='max-w-3xl text-wrap'>
+            We will use Supabase to host the database without using their SDKs.
+            - Go to [here](https://app.supabase.com/) and create a new project.
+            - Name the project as whatever you want, and give it a password. Save the password somewhere safe.
+
+            Once you are in the project, at the top of the nav bar, click `Connect`.
+            - Click on the `ORMs` tab, and select `Drizzle`. Copy the `DATABASE_URL`.
+            - Replace the `[YOUR-PASSWORD]` with the password you saved earlier.
+            </div>
+            </TableCell>
+        </TableRow>
+    </TableBody>
+</Table>
+Once cloned and you have a database ready, Copy `.env.example` and name it `.env`. Configure it based on the instructions in `.env`.
+
+Example:
+```
+DATABASE_URL=postgresql://myuser:mysecretpassword@localhost:5432/fntu-db
+```
+
+## Loading the Data into the Database
+First, push the schema to the database. You will need to do this if the table schemas ever change.
+```bash
+pnpm drizzle-kit push
+```
+
+<Alert variant="warning" className="flex flex-col gap-2 not-prose">
+  <AlertTitle className="text-sm md:text-base lg:text-lg">If you are using Supabase...</AlertTitle>
+  <AlertDescription className="text-xs md:text-sm lg:text-base">
+    RLS is required for every table in the schema. Annoyingly, everytime you do a push to the database, you need to enable RLS again. To do so: 
+    <ul className='prose text-white list-disc list-inside'>
+    <li>Go to <a href="https://github.com/Acrylic125/fntu/blob/main/scraper/enable-rls.sql" target="_blank" rel="noopener noreferrer" className='underline'>enable-rls.sql</a> and copy the script.</li>
+    <li>Go to `SQL Editor` in Supabase, paste the script and run it.</li>
+    </ul>
+  </AlertDescription>
+</Alert>
+
+Then, run the insertion script.
+```bash
+pnpm ts-node insert.ts
+```
+
+{/* ### Using Docker
+```bash
+docker run -d \
+  --name fntu-postgres \
+  -e POSTGRES_PASSWORD=mysecretpassword \
+  -e POSTGRES_USER=myuser \
+  -e POSTGRES_DB=mydb \
+  -p 5432:5432 \
+  postgres:16
+``` */}

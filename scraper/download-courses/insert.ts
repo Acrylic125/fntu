@@ -3,7 +3,6 @@ import {
   MetadataSchema,
   Days,
 } from "../schema";
-import { db } from "../db";
 import {
   courseIndexClassesTable,
   courseIndexSourcesTable,
@@ -15,6 +14,9 @@ import fs from "fs";
 import { and, eq } from "drizzle-orm";
 import { extractCourseNameAndFlags } from "../utils";
 import chalk from "chalk";
+import { getDb } from "../db";
+
+type Db = ReturnType<typeof getDb>;
 
 async function getMetadata(filepath: string) {
   const metadata = MetadataSchema.parse(
@@ -39,6 +41,7 @@ function* batchIteration(batchSize: number, total: number) {
 }
 
 async function doProgramsInsert(
+  db: Db,
   metadata: Awaited<ReturnType<typeof getMetadata>>
 ) {
   const programs = metadata.map((m) => m.source);
@@ -65,6 +68,7 @@ async function doProgramsInsert(
 }
 
 async function doCoursesInsert(
+  db: Db,
   ay: string,
   semester: string,
   all: Awaited<ReturnType<typeof getScrapedResults>>
@@ -88,6 +92,7 @@ async function doCoursesInsert(
 }
 
 async function doCoursesIndexInsert(
+  db: Db,
   ay: string,
   semester: string,
   all: Awaited<ReturnType<typeof getScrapedResults>>
@@ -120,6 +125,7 @@ async function doCoursesIndexInsert(
 }
 
 async function doIndexClassesInsert(
+  db: Db,
   ay: string,
   semester: string,
   all: Awaited<ReturnType<typeof getScrapedResults>>
@@ -189,6 +195,7 @@ function programToKey(program: {
 }
 
 async function doInsertIndexSources(
+  db: Db,
   ay: string,
   semester: string,
   all: Awaited<ReturnType<typeof getScrapedResults>>
@@ -258,6 +265,7 @@ export const COURSE_INSERTION_OPTIONS = [
 ] as const;
 
 export async function doInsert(
+  db: Db,
   ay: string,
   semester: string,
   options: {
@@ -271,23 +279,23 @@ export async function doInsert(
   const successOptions = [];
   try {
     if (options.options.includes("Programs")) {
-      await doProgramsInsert(metadata);
+      await doProgramsInsert(db, metadata);
       successOptions.push("Programs");
     }
     if (options.options.includes("Courses")) {
-      await doCoursesInsert(ay, semester, all);
+      await doCoursesInsert(db, ay, semester, all);
       successOptions.push("Courses");
     }
     if (options.options.includes("Courses Index")) {
-      await doCoursesIndexInsert(ay, semester, all);
+      await doCoursesIndexInsert(db, ay, semester, all);
       successOptions.push("Courses Index");
     }
     if (options.options.includes("Index Classes")) {
-      await doIndexClassesInsert(ay, semester, all);
+      await doIndexClassesInsert(db, ay, semester, all);
       successOptions.push("Index Classes");
     }
     if (options.options.includes("Index Sources")) {
-      await doInsertIndexSources(ay, semester, all);
+      await doInsertIndexSources(db, ay, semester, all);
       successOptions.push("Index Sources");
     }
   } catch (error) {

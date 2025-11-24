@@ -11,6 +11,9 @@ import {
   COURSE_INSERTION_OPTIONS,
   doInsert as doCourseInsert,
 } from "./download-courses/insert";
+import dotenv from "dotenv";
+import { getDb } from "./db";
+dotenv.config();
 
 const program = new Command();
 
@@ -26,11 +29,13 @@ program
 
     console.log(chalk.blue("FNTU"));
     console.log(`Artifacts will be saved in ${outDir}`);
+    console.log("");
+    console.log(`TIP: You can use the -s flag to skip optional prompts.`);
     if (!fs.existsSync(outDir)) {
       fs.mkdirSync(outDir, { recursive: true });
     }
 
-    const { acadSemester } = await inquirer.prompt([
+    const { acadSemester: ay } = await inquirer.prompt([
       {
         type: "select",
         name: "acadSemester",
@@ -48,14 +53,12 @@ program
         default: `AY 25/26 S2`,
       },
     ]);
-    const acadYear = acadSemester.year;
-    const sem = acadSemester.sem;
 
     // Download program data sources.
     const sourcesBaseDir = path.resolve(outDir, "data-sources");
     const sourcesAcadYearDir = path.resolve(
       sourcesBaseDir,
-      `${acadYear}-${sem}`
+      `${ay.year}-${ay.sem}`
     );
     const sourcesProgramFile = path.resolve(
       sourcesAcadYearDir,
@@ -82,7 +85,7 @@ program
         fs.mkdirSync(sourcesAcadYearDir, { recursive: true });
       }
       console.log("Downloading data sources from NTU");
-      await downloadDataSources(`${acadYear};${sem}`, sourcesProgramFile);
+      await downloadDataSources(`${ay.year};${ay.sem}`, sourcesProgramFile);
 
       console.log("Downloaded complete.");
     }
@@ -146,7 +149,7 @@ program
         scrapeProgramsPath,
         downloadSchedulesPath,
         downloadSchedulesMetadataPath,
-        `${acadYear};${sem}`
+        `${ay.year};${ay.sem}`
       );
       console.log("Downloaded complete.");
     }
@@ -182,6 +185,25 @@ program
 
     // Insert data into database.
     console.log("Inserting data into database");
+    console.log("");
+
+    let dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      console.log(
+        chalk.red(
+          "DATABASE_URL is not set in the environment variables. Please add a .env file and set the DATABASE_URL variable to your PostgreSQL database URL."
+        )
+      );
+      console.log("");
+      console.log("Example .env file:");
+      console.log(
+        "DATABASE_URL=postgresql://username:password@host:port/database"
+      );
+      console.log("");
+      console.log("TIP: You can use the -s flag to skip optional prompts.");
+      return;
+    }
+    const db = getDb(dbUrl!);
     console.log(
       chalk.red(
         "PLEASE BE CAREFUL WITH THIS STEP, IT MAY CAUSE DUPLICATED DATA."
@@ -201,7 +223,7 @@ program
         choices: COURSE_INSERTION_OPTIONS,
       },
     ]);
-    await doCourseInsert(acadYear, sem, {
+    await doCourseInsert(db, ay.yearCode, ay.sem, {
       schedulesMetadataPath: downloadSchedulesMetadataPath,
       allSchedulesPath: scrapeSchedulesPath,
       options: courseInsertOptions.options,
