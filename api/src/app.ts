@@ -22,7 +22,8 @@ app.get(
       info: {
         title: "FNTU API",
         version: "1.0.0",
-        description: "API Reference.",
+        description:
+          '## Overview\n \nThis is the API reference for the FNTU API Playground. To try it out, generate an API key from the [API Keys](https://fntu.benapps.dev/dashboard/api-keys) page, and paste it in the `Authorization` field.\n \nYou might need to scroll down a bit to see the input fields.\n \n## Pagination\nSome routes support pagination. Generally, you pass in a limit and a cursor to paginate. The "next cursor" will be provided in the response.',
       },
     },
   })
