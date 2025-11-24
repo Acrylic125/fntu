@@ -38,7 +38,7 @@ export default async function APIKeysPage() {
         <AlertTitle>Heavy Limitations!</AlertTitle>
         <AlertDescription className="text-xs md:text-sm lg:text-base">
           The playground is intended for experimentation and learning. Please
-          for production use.
+          self-host for production use.
         </AlertDescription>
       </Alert>
       <APIKeysTable />
