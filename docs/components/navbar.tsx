@@ -33,6 +33,19 @@ export function MainNavbar() {
             >
               <Link href="/dashboard/api-keys">API Keys</Link>
             </Button>
+            <Button
+              variant="ghost"
+              asChild
+              className="text-left flex flex-row items-center px-2"
+            >
+              <a
+                href="https://fntu-api.benapps.dev"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <p>API Playground</p>
+              </a>
+            </Button>
           </div>
         </div>
         <div className="flex flex-row items-center gap-4">

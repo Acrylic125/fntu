@@ -1,18 +1,5 @@
 import { MainNavbar } from "@/components/navbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import Link from "next/link";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
-import { MenuIcon } from "lucide-react";
 
 export default function DocsLayout({
   children,
