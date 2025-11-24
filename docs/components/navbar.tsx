@@ -51,12 +51,13 @@ export function MainNavbar() {
                       >
                         API
                       </Link>
-                      <Link
-                        href="/docs/playground"
-                        onClick={() => setSheetOpen(false)}
+                      <a
+                        href="https://fntu-api.benapps.dev"
+                        target="_blank"
+                        rel="noopener noreferrer"
                       >
-                        Playground
-                      </Link>
+                        <p>Playground</p>
+                      </a>
                     </div>
                   </div>
                   <div className="flex flex-col gap-2 px-8">
