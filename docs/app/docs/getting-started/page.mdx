@@ -14,49 +14,49 @@ import {
 The project distills NTU's data into a structured format, and makes it easy to use in your projects.
 
 There are 3 ways to access the data:
-  <Table>
+<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0">
       <TableHeader>
         <TableRow>
           <TableHead className="w-8">#</TableHead>
-          <TableHead>Method</TableHead>
-          <TableHead>Use Cases</TableHead>
+          <TableHead colSpan={1}>Method</TableHead>
+          <TableHead colSpan={4}>Use Cases</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <TableRow>
-            <TableCell className="font-medium w-8">
+            <TableCell colSpan={1} className="font-medium w-8">
             1
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={1}>
             [API Playground](/docs/playground)
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={4}>
             - Explore what data is available.
             - Use as a reference for your own projects.
             - Hack up prototypes.
             </TableCell>
         </TableRow>
         <TableRow>
-            <TableCell className="font-medium w-8">
+            <TableCell colSpan={1} className="font-medium w-8">
             2
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={1}>
             [Download the Data](/docs/load-into-database)
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={4}>
             - Analyze the raw data.
             - Manage the data to meet your needs.
             - Hack up prototypes, giving flexibility to querying.
             </TableCell>
         </TableRow>
         <TableRow>
-            <TableCell className="font-medium w-8">
+            <TableCell colSpan={1} className="font-medium w-8">
             3
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={1}>
             [Scrape the Data](/docs/scraper)
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={4}>
             - Add/Modify fields to the raw data.
             - Postprocess the data to meet your needs.
             </TableCell>

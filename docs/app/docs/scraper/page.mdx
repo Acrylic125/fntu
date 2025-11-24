@@ -8,14 +8,23 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 # Scraper 
+
+<Alert variant="warning" className="flex flex-col gap-2 not-prose">
+  <AlertTitle className="text-sm md:text-base lg:text-lg">Scraping is a "Gray Area"</AlertTitle>
+  <AlertDescription className="text-xs md:text-sm lg:text-base">
+    We are only scraping publically available pages (Pages not requiring authentication). Avoid hammering the data sources with requests and consider using the data that has already been scraped.
+  </AlertDescription>
+</Alert>
 
 Tool to scrape data and distill it. 
 
 The code can be found [here](https://github.com/Acrylic125/fntu/tree/main/scraper).
 
 ## High level overview 
+![Scraper Steps](/scraper-steps.png)
 1. **Source** the data we want to scrape. See **Data Sources** for more details.
 1. **Download** the pages (i.e. **Data Sources**).
 1. **Scrape** the data from the pages, and consolidate it. (In JSON format)
@@ -24,30 +33,41 @@ The code can be found [here](https://github.com/Acrylic125/fntu/tree/main/scrape
 
 You may modify any of these steps to fit your needs.
 
+<Alert variant="warning" className="flex flex-col gap-2 not-prose">
+  <AlertTitle className="text-sm md:text-base lg:text-lg">Scraping is hard!</AlertTitle>
+  <AlertDescription className="text-xs md:text-sm lg:text-base">
+    Scraping can lead to incosnsitent results as we do not own the pages we scrape from. The steps are broken into individual scripts to easily tell which step failed.
+  </AlertDescription>
+</Alert>
+
 ## Data Sources
 Data sources are the pages we want to scrape from.
 
-<Table>
+<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0">
       <TableHeader>
         <TableRow>
-          <TableHead>Use</TableHead>
-          <TableHead>Data Sources</TableHead>
+          <TableHead colSpan={1}>
+          Use
+          </TableHead>
+          <TableHead colSpan={4}>
+          Data Sources
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         <TableRow>
-            <TableCell>
+            <TableCell colSpan={1}>
             Courses
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={4}>
             - [Undergraduate Programs](https://wish.wis.ntu.edu.sg/webexe/owa/aus_schedule.main)
             </TableCell>
         </TableRow>
         <TableRow>
-            <TableCell>
+            <TableCell colSpan={1}>
             Locations
             </TableCell>
-            <TableCell>
+            <TableCell colSpan={4}>
             Sourcing main locations.
             - [Mapsindoors Categories](https://api.mapsindoors.com/ntuprod/api/categories)
             - [Mapsindoors Academic Facilities](https://api.mapsindoors.com/ntuprod/api/locations?venue=NTU&categories=AcademicFacilities&take=1000&skip=0&orderBy=relevance&extendedLocations=true&lr=en-US)
@@ -61,8 +81,12 @@ Data sources are the pages we want to scrape from.
             - [SPMS](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=SPMS)
             - [EEE](https://wis.ntu.edu.sg/pls/webexe88/LADOCU.FBSLOCATN?w_sch=EEE)
             </div>
-            
             </TableCell>
         </TableRow>
     </TableBody>
 </Table>
+
+## Tips for Scraping
+1. Try to find relevant pages to scrape from.
+1. Go into **Inspect Element**, typically under **Inspector** tab, download the HTML and see what data is given. Use GenAI to help you extract the data you need.
+1. Go into **Inspect Element**, typically under **Network** tab, see what requests are made to the server.
