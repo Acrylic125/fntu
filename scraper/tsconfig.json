@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "ESNext",
+    // "module": "commonjs",
     "esModuleInterop": true,
     "target": "es6",
     "moduleResolution": "node",
@@ -10,6 +11,10 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "types": ["jest", "node"]
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]

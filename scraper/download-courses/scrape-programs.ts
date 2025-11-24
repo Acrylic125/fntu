@@ -89,21 +89,14 @@ function scrapeProgramOptions(html: string): ProgramSource[] {
   return results;
 }
 
-// Main execution
-const htmlPath = path.resolve("./out/scrape-sources.html");
-const html = fs.readFileSync(htmlPath, "utf8");
-const programs = scrapeProgramOptions(html);
+export async function scrapePrograms(htmlPath: string, outputPath: string) {
+  const html = fs.readFileSync(htmlPath, "utf8");
+  const programs = scrapeProgramOptions(html);
 
-console.log(`Found ${programs.length} program options`);
-console.log("Sample programs:");
-programs.slice(0, 5).forEach((program) => {
-  console.log(`- ${program.name} (${program.ref})`);
-});
+  console.log(`Found ${programs.length} program options`);
 
-// Save results to file
-fs.writeFileSync(
-  path.resolve("./out/program-sources.json"),
-  JSON.stringify(programs, null, 2)
-);
+  // Save results to file
+  fs.writeFileSync(outputPath, JSON.stringify(programs, null, 2));
 
-console.log(`\nResults saved to program-sources.json`);
+  // console.log(`\nResults saved to program-sources.json`);
+}

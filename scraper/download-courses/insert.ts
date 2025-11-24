@@ -2,9 +2,6 @@ import {
   ProgramCourseListSchema as ClassesSchema,
   MetadataSchema,
   Days,
-  ProgramSourceSchema,
-  ProgramSchema,
-  VenueListSchema,
 } from "../schema";
 import { db } from "../db";
 import {
@@ -13,32 +10,22 @@ import {
   courseIndexTable,
   coursesTable,
   programsTable,
-  venuesTable,
 } from "../db/schema";
-import path from "path";
 import fs from "fs";
 import { and, eq } from "drizzle-orm";
 import { extractCourseNameAndFlags } from "../utils";
+import chalk from "chalk";
 
-async function getMetadata(dir: string) {
+async function getMetadata(filepath: string) {
   const metadata = MetadataSchema.parse(
-    JSON.parse(fs.readFileSync(path.resolve(dir, "metadata.json"), "utf8"))
+    JSON.parse(fs.readFileSync(filepath, "utf8"))
   );
   return metadata;
 }
 
-async function getScrapedResults(dir: string) {
-  const resultsPath = path.resolve(dir, "./out/classes.json");
+async function getScrapedResults(filepath: string) {
   const all = ClassesSchema.parse(
-    JSON.parse(fs.readFileSync(resultsPath, "utf8"))
-  );
-  return all;
-}
-
-async function getScrapedFacilities(dir: string) {
-  const resultsPath = path.resolve(dir, "./out/venues.json");
-  const all = VenueListSchema.parse(
-    JSON.parse(fs.readFileSync(resultsPath, "utf8"))
+    JSON.parse(fs.readFileSync(filepath, "utf8"))
   );
   return all;
 }
@@ -51,15 +38,37 @@ function* batchIteration(batchSize: number, total: number) {
   }
 }
 
-async function doProgramsInsert() {
-  const metadata = await getMetadata(path.resolve("./out/raw-schedules"));
+async function doProgramsInsert(
+  metadata: Awaited<ReturnType<typeof getMetadata>>
+) {
   const programs = metadata.map((m) => m.source);
-  await db.insert(programsTable).values(programs);
+  const alreadyInsertedPrograms = await db
+    .select({
+      code: programsTable.code,
+      subCode: programsTable.subCode,
+      year: programsTable.year,
+      type: programsTable.type,
+    })
+    .from(programsTable);
+  const programsToInsert = programs.filter(
+    (p) =>
+      !alreadyInsertedPrograms.some(
+        (ip) =>
+          ip.code === p.code &&
+          ip.subCode === p.subCode &&
+          ip.year === p.year &&
+          ip.type === p.type
+      )
+  );
+  await db.insert(programsTable).values(programsToInsert);
   console.log("Programs inserted");
 }
 
-async function doCoursesInsert(ay: string, semester: string) {
-  const all = await getScrapedResults(__dirname);
+async function doCoursesInsert(
+  ay: string,
+  semester: string,
+  all: Awaited<ReturnType<typeof getScrapedResults>>
+) {
   const courses = all.map((c) => {
     const { name, flags } = extractCourseNameAndFlags(c.course.name);
     return {
@@ -78,8 +87,11 @@ async function doCoursesInsert(ay: string, semester: string) {
   console.log("Courses inserted");
 }
 
-async function doCoursesIndexInsert(ay: string, semester: string) {
-  const all = await getScrapedResults(__dirname);
+async function doCoursesIndexInsert(
+  ay: string,
+  semester: string,
+  all: Awaited<ReturnType<typeof getScrapedResults>>
+) {
   const allCourses = await db
     .select()
     .from(coursesTable)
@@ -104,11 +116,14 @@ async function doCoursesIndexInsert(ay: string, semester: string) {
     }
   }
   await db.insert(courseIndexTable).values(allIndexes);
-  console.log("Courses indexes inserted");
+  console.log("Courses Indexes inserted");
 }
 
-async function doIndexClassesInsert(ay: string, semester: string) {
-  const all = await getScrapedResults(__dirname);
+async function doIndexClassesInsert(
+  ay: string,
+  semester: string,
+  all: Awaited<ReturnType<typeof getScrapedResults>>
+) {
   const allIndexesWithinAYSemester = await db
     .select()
     .from(courseIndexTable)
@@ -161,7 +176,7 @@ async function doIndexClassesInsert(ay: string, semester: string) {
       .values(allIndexClasses.slice(batch, end));
   }
 
-  console.log("Index classes inserted");
+  console.log("Index Classes inserted");
 }
 
 function programToKey(program: {
@@ -173,8 +188,11 @@ function programToKey(program: {
   return `${program.code}-${program.subCode ?? "__NULL__"}-${program.year ?? "__NULL__"}-${program.type}`;
 }
 
-async function doInsertIndexSources(ay: string, semester: string) {
-  const all = await getScrapedResults(__dirname);
+async function doInsertIndexSources(
+  ay: string,
+  semester: string,
+  all: Awaited<ReturnType<typeof getScrapedResults>>
+) {
   const allIndexesWithinAYSemester = await db
     .select()
     .from(courseIndexTable)
@@ -228,24 +246,78 @@ async function doInsertIndexSources(ay: string, semester: string) {
       .insert(courseIndexSourcesTable)
       .values(allIndexSources.slice(batch, end));
   }
-  console.log("Index sources inserted");
+  console.log("Index Sources inserted");
 }
 
-async function doInsertVenues() {
-  const all = await getScrapedFacilities(__dirname);
-  for (const { batch, end } of batchIteration(1000, all.length)) {
-    await db.insert(venuesTable).values(all.slice(batch, end));
+export const COURSE_INSERTION_OPTIONS = [
+  "Programs",
+  "Courses",
+  "Courses Index",
+  "Index Classes",
+  "Index Sources",
+] as const;
+
+export async function doInsert(
+  ay: string,
+  semester: string,
+  options: {
+    schedulesMetadataPath: string;
+    allSchedulesPath: string;
+    options: (typeof COURSE_INSERTION_OPTIONS)[number][];
   }
-  console.log("Venues inserted");
+) {
+  const metadata = await getMetadata(options.schedulesMetadataPath);
+  const all = await getScrapedResults(options.allSchedulesPath);
+  const successOptions = [];
+  try {
+    if (options.options.includes("Programs")) {
+      await doProgramsInsert(metadata);
+      successOptions.push("Programs");
+    }
+    if (options.options.includes("Courses")) {
+      await doCoursesInsert(ay, semester, all);
+      successOptions.push("Courses");
+    }
+    if (options.options.includes("Courses Index")) {
+      await doCoursesIndexInsert(ay, semester, all);
+      successOptions.push("Courses Index");
+    }
+    if (options.options.includes("Index Classes")) {
+      await doIndexClassesInsert(ay, semester, all);
+      successOptions.push("Index Classes");
+    }
+    if (options.options.includes("Index Sources")) {
+      await doInsertIndexSources(ay, semester, all);
+      successOptions.push("Index Sources");
+    }
+  } catch (error) {
+    console.error(error);
+    console.log(
+      chalk.red("Insertion failed, please rectify and try again. Either:")
+    );
+    console.log(
+      " - Delete what was already inserted and run the insertion again."
+    );
+    console.log(" - Only rerun those that were PREVIOUSLY not successful.");
+    console.log("");
+    console.log("Summary of insertion:");
+    for (const option of options.options) {
+      if (successOptions.includes(option)) {
+        console.log(chalk.green(` - ${option} inserted successfully`));
+      } else {
+        console.log(chalk.red(` - ${option} insertion failed`));
+      }
+    }
+    return;
+  }
 }
 
-(async () => {
-  const ay = "25/26";
-  const sem = "1";
-  // await doProgramsInsert();
-  // await doCoursesInsert(ay, sem);
-  // await doCoursesIndexInsert(ay, sem);
-  // await doIndexClassesInsert(ay, sem);
-  // await doInsertIndexSources(ay, sem);
-  // await doInsertVenues();
-})();
+// (async () => {
+//   const ay = "25/26";
+//   const sem = "1";
+//   await doProgramsInsert();
+//   await doCoursesInsert(ay, sem);
+//   await doCoursesIndexInsert(ay, sem);
+//   await doIndexClassesInsert(ay, sem);
+//   await doInsertIndexSources(ay, sem);
+// })();

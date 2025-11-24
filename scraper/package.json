@@ -2,14 +2,16 @@
   "name": "fstars",
   "version": "1.0.0",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "run": "ts-node scrape.ts"
+    "start": "node --loader ts-node/esm index.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@types/inquirer": "^9.0.9",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.3",
     "@types/seedrandom": "^3.0.8",
@@ -19,10 +21,12 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "chalk": "^5.6.2",
     "cheerio": "^1.1.0",
     "commander": "^14.0.2",
     "dotenv": "^17.2.0",
     "drizzle-orm": "^0.44.2",
+    "inquirer": "^13.0.1",
     "postgres": "^3.4.7",
     "seedrandom": "^3.0.5",
     "ts-node": "^10.9.2",

@@ -155,64 +155,124 @@ function scrapePageForCourses(html: string) {
   return results;
 }
 
-const rawSchedulesDir = path.resolve("./out/raw-schedules");
-const metadata = MetadataSchema.parse(
-  JSON.parse(
-    fs.readFileSync(path.resolve(rawSchedulesDir, "metadata.json"), "utf8")
-  )
-);
-console.log(metadata);
+export async function scrapeSchedules(
+  metadataPath: string,
+  outputPath: string
+) {
+  const metadata = MetadataSchema.parse(
+    JSON.parse(fs.readFileSync(metadataPath, "utf8"))
+  );
 
-const courseSchedules = new Map<CourseCode, Course>();
-// course code -> serialized course
-// const checkDuplicates = new Map<string, string>();
-for (let i = 0; i < metadata.length; i++) {
-  if (i % 20 === 0) {
-    console.log(`Processing ${i} of ${metadata.length}`);
-  }
-  const entry = metadata[i];
-  const html = fs.readFileSync(path.resolve("./out", entry.path), "utf8");
-  const courses = scrapePageForCourses(html);
-  for (const course of courses) {
-    const cur = courseSchedules.get(course.course.code);
-    if (cur) {
-      const curIndexPositions = new Map<string, number>(
-        cur.indices.map((index: Index, i: number) => {
-          return [index.index, i];
-        })
-      );
-      for (const index of course.indices) {
-        const i = curIndexPositions.get(index.index);
-        if (i !== undefined) {
-          // console.log(`Already have index, ${index.index}. Adding source`);
-          const curIndex = cur.indices[i];
-          curIndex.sources.push({
-            code: entry.source.code,
-            subCode: entry.source.subCode ?? undefined,
-            year: entry.source.year ?? undefined,
-            type: entry.source.type,
-          });
-          continue;
+  const courseSchedules = new Map<CourseCode, Course>();
+  // course code -> serialized course
+  // const checkDuplicates = new Map<string, string>();
+  for (let i = 0; i < metadata.length; i++) {
+    if (i % 20 === 0 || i === metadata.length) {
+      console.log(`Processing ${i} of ${metadata.length}`);
+    }
+    const entry = metadata[i];
+    const html = fs.readFileSync(path.resolve("./out", entry.path), "utf8");
+    const courses = scrapePageForCourses(html);
+    for (const course of courses) {
+      const cur = courseSchedules.get(course.course.code);
+      if (cur) {
+        const curIndexPositions = new Map<string, number>(
+          cur.indices.map((index: Index, i: number) => {
+            return [index.index, i];
+          })
+        );
+        for (const index of course.indices) {
+          const i = curIndexPositions.get(index.index);
+          if (i !== undefined) {
+            // console.log(`Already have index, ${index.index}. Adding source`);
+            const curIndex = cur.indices[i];
+            curIndex.sources.push({
+              code: entry.source.code,
+              subCode: entry.source.subCode ?? undefined,
+              year: entry.source.year ?? undefined,
+              type: entry.source.type,
+            });
+            continue;
+          }
+          cur.indices.push(index);
         }
-        cur.indices.push(index);
+        continue;
       }
-      continue;
+      for (const index of course.indices) {
+        index.sources.push({
+          code: entry.source.code,
+          subCode: entry.source.subCode ?? undefined,
+          year: entry.source.year ?? undefined,
+          type: entry.source.type,
+        });
+      }
+      courseSchedules.set(course.course.code, course);
     }
-    for (const index of course.indices) {
-      index.sources.push({
-        code: entry.source.code,
-        subCode: entry.source.subCode ?? undefined,
-        year: entry.source.year ?? undefined,
-        type: entry.source.type,
-      });
-    }
-    courseSchedules.set(course.course.code, course);
   }
+
+  const results = Array.from(courseSchedules.values());
+  // console.log(results)
+  fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
 }
 
-const results = Array.from(courseSchedules.values());
-// console.log(results)
-fs.writeFileSync(
-  path.resolve("./out/classes.json"),
-  JSON.stringify(results, null, 2)
-);
+// const rawSchedulesDir = path.resolve("./out/raw-schedules");
+// const metadata = MetadataSchema.parse(
+//   JSON.parse(
+//     fs.readFileSync(path.resolve(rawSchedulesDir, "metadata.json"), "utf8")
+//   )
+// );
+// console.log(metadata);
+
+// const courseSchedules = new Map<CourseCode, Course>();
+// // course code -> serialized course
+// // const checkDuplicates = new Map<string, string>();
+// for (let i = 0; i < metadata.length; i++) {
+//   if (i % 20 === 0) {
+//     console.log(`Processing ${i} of ${metadata.length}`);
+//   }
+//   const entry = metadata[i];
+//   const html = fs.readFileSync(path.resolve("./out", entry.path), "utf8");
+//   const courses = scrapePageForCourses(html);
+//   for (const course of courses) {
+//     const cur = courseSchedules.get(course.course.code);
+//     if (cur) {
+//       const curIndexPositions = new Map<string, number>(
+//         cur.indices.map((index: Index, i: number) => {
+//           return [index.index, i];
+//         })
+//       );
+//       for (const index of course.indices) {
+//         const i = curIndexPositions.get(index.index);
+//         if (i !== undefined) {
+//           // console.log(`Already have index, ${index.index}. Adding source`);
+//           const curIndex = cur.indices[i];
+//           curIndex.sources.push({
+//             code: entry.source.code,
+//             subCode: entry.source.subCode ?? undefined,
+//             year: entry.source.year ?? undefined,
+//             type: entry.source.type,
+//           });
+//           continue;
+//         }
+//         cur.indices.push(index);
+//       }
+//       continue;
+//     }
+//     for (const index of course.indices) {
+//       index.sources.push({
+//         code: entry.source.code,
+//         subCode: entry.source.subCode ?? undefined,
+//         year: entry.source.year ?? undefined,
+//         type: entry.source.type,
+//       });
+//     }
+//     courseSchedules.set(course.course.code, course);
+//   }
+// }
+
+// const results = Array.from(courseSchedules.values());
+// // console.log(results)
+// fs.writeFileSync(
+//   path.resolve("./out/classes.json"),
+//   JSON.stringify(results, null, 2)
+// );
