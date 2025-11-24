@@ -22,21 +22,20 @@ export function MainNavbar() {
             <Button
               variant="ghost"
               asChild
-              className="text-left flex flex-row items-center px-2 text-sm"
+              className="text-left flex flex-row items-center px-2 text-xs md:text-sm"
             >
               <Link href="/docs/getting-started">Docs</Link>
             </Button>
             <Button
               variant="ghost"
               asChild
-              className="text-left flex flex-row items-center px-2 text-sm"
+              className="text-left flex flex-row items-center px-2 text-xs md:text-sm"
             >
               <Link href="/dashboard/api-keys">API</Link>
             </Button>
             <Button
               variant="ghost"
-              asChild
-              className="text-left flex flex-row items-center px-2 text-sm"
+              className="text-left flex flex-row items-center px-2 text-xs md:text-sm"
             >
               <a
                 href="https://fntu-api.benapps.dev"

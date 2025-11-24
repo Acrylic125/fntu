@@ -255,15 +255,12 @@ export default {
       }
 
       const { success } = await env.SIMPLE_RATE_LIMITER.limit({
-        key: pathname,
+        key: sub,
       }); // key can be any string of your choosing
       if (!success) {
-        return new Response(
-          `429 Failure - rate limit exceeded for ${pathname}`,
-          {
-            status: 429,
-          }
-        );
+        return new Response(`429 Failure - rate limit exceeded for ${sub}`, {
+          status: 429,
+        });
       }
     }
 

@@ -8,6 +8,7 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import Link from "next/link"
 
 # Getting Started
 
@@ -29,7 +30,7 @@ There are 3 ways to access the data:
             </TableCell>
             <TableCell colSpan={1}>
             <div className='w-full text-wrap'>
-            [API Playground](/docs/playground)
+            <Link href="/docs/playground">API Playground</Link>
             </div>
             </TableCell>
             <TableCell colSpan={3}>
@@ -46,7 +47,7 @@ There are 3 ways to access the data:
             </TableCell>
             <TableCell colSpan={1}>
             <div className='w-full text-wrap'>
-            [Download the Data](/docs/download)
+            <Link href="/docs/download">Download the Data</Link>
             </div>
             </TableCell>
             <TableCell colSpan={3}>
@@ -63,7 +64,7 @@ There are 3 ways to access the data:
             </TableCell>
             <TableCell colSpan={1}>
             <div className='w-full text-wrap'>
-            [Scrape the Data](/docs/scraper)
+            <Link href="/docs/scraper">Scrape the Data</Link>
             </div>
             </TableCell>
             <TableCell colSpan={3}>
