@@ -4,14 +4,94 @@ import Link from "next/link";
 import { Favicon } from "./icons/favicon";
 import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
 import { Button } from "./ui/button";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
+import { MenuIcon } from "lucide-react";
+import { ScrollArea } from "./ui/scroll-area";
+import { sections } from "@/app/docs/layout";
+import { useState } from "react";
 
 export function MainNavbar() {
   const { user } = useUser();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   return (
     <nav className="w-full flex flex-col items-center border-b border-border">
-      <div className="w-full h-14 md:h-16 max-w-ui flex flex-row items-center justify-between py-1.5 px-4 md:px-8">
-        <div className="flex flex-row gap-2 items-center h-full">
+      <div className="w-full h-14 md:h-16 flex flex-row items-center justify-between py-1.5 px-4 md:px-8">
+        <div className="lg:hidden flex flex-row items-center gap-2">
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="secondary"
+                className="lg:hidden absolute top-4 left-4"
+              >
+                <MenuIcon />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left">
+              <ScrollArea className="h-svh">
+                <div className="flex flex-col gap-8 pb-20">
+                  <SheetHeader>
+                    <SheetTitle className="sr-only">FNTU</SheetTitle>
+                  </SheetHeader>
+                  <div className="flex flex-col gap-2 px-8">
+                    <h3 className="text-muted-foreground">FNTU</h3>
+                    <div className="flex flex-col gap-2">
+                      <Link
+                        href="/docs/getting-started"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        Docs
+                      </Link>
+                      <Link
+                        href="/dashboard/api-keys"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        API
+                      </Link>
+                      <Link
+                        href="/docs/playground"
+                        onClick={() => setSheetOpen(false)}
+                      >
+                        Playground
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-2 px-8">
+                    <h3 className="text-muted-foreground">Docs</h3>
+                    <div className="flex flex-col gap-8">
+                      {sections.map((section) => (
+                        <div
+                          key={section.title}
+                          className="flex flex-col gap-2"
+                        >
+                          <h2 className="text-lg font-bold">{section.title}</h2>
+                          <div className="flex flex-col gap-2">
+                            {section.pages.map((page) => (
+                              <Link
+                                key={page.href}
+                                href={page.href}
+                                onClick={() => setSheetOpen(false)}
+                              >
+                                {page.title}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </ScrollArea>
+            </SheetContent>
+          </Sheet>
+        </div>
+        <div className="hidden lg:flex flex-row gap-2 items-center h-full">
           <Link href="/" className="h-full flex flex-row gap-2.5 items-center">
             <div className="relative aspect-square w-10 rounded-md overflow-hidden">
               <Favicon />

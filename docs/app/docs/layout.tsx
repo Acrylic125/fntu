@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MenuIcon } from "lucide-react";
 
-const sections = [
+export const sections = [
   {
     title: "Introduction",
     pages: [
@@ -90,37 +90,6 @@ export default function DocsLayout({
             </div>
           </div>
         </ScrollArea>
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button
-              variant="secondary"
-              className="lg:hidden absolute top-4 left-4"
-            >
-              <MenuIcon />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="left">
-            <ScrollArea className="h-svh">
-              <SheetHeader>
-                <SheetTitle className="sr-only">Documentation</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col gap-8 p-8">
-                {sections.map((section) => (
-                  <div key={section.title} className="flex flex-col gap-2">
-                    <h2 className="text-lg font-bold">{section.title}</h2>
-                    <div className="flex flex-col gap-2">
-                      {section.pages.map((page) => (
-                        <Link key={page.href} href={page.href}>
-                          {page.title}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </SheetContent>
-        </Sheet>
       </div>
     </div>
   );
