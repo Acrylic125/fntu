@@ -28,20 +28,24 @@ Below we have some recommended ways to setup a PostgreSQL database.
       <TableBody>
         <TableRow>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [Local PostgreSQL](https://www.postgresql.org/download/)
+            </div>
             </TableCell>
             <TableCell colSpan={4}>
-            <div className='max-w-3xl text-wrap'>
+            <div className='w-full max-w-3xl text-wrap'>
             Refer to this [Guide](https://www.codecademy.com/article/installing-and-using-postgresql-locally)
             </div>
             </TableCell>
         </TableRow>
         <TableRow>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [Docker](https://www.docker.com/)
+            </div>
             </TableCell>
             <TableCell colSpan={4}>
-            <div className='max-w-3xl text-wrap'>
+            <div className='w-full max-w-3xl text-wrap'>
             For a local setup,
             - Run `docker run -d --name fntu-postgres -e POSTGRES_PASSWORD=mysecretpassword -e POSTGRES_USER=myuser -e POSTGRES_DB=fntu-db -p 5432:5432 postgres:16`
             - Try it out with `docker exec -it fntu-postgres psql -U myuser -d fntu-db`
@@ -69,10 +73,12 @@ Below we have some recommended ways to setup a PostgreSQL database.
         </TableRow>
         <TableRow>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [Supabase](https://supabase.com/)
+            </div>
             </TableCell>
             <TableCell colSpan={4}>
-            <div className='max-w-3xl text-wrap'>
+            <div className='w-full max-w-3xl text-wrap'>
             We will use Supabase to host the database without using their SDKs.
             - Go to [here](https://app.supabase.com/) and create a new project.
             - Name the project as whatever you want, and give it a password. Save the password somewhere safe.
@@ -102,7 +108,7 @@ pnpm drizzle-kit push
   <AlertTitle className="text-sm md:text-base lg:text-lg">If you are using Supabase...</AlertTitle>
   <AlertDescription className="text-xs md:text-sm lg:text-base">
     RLS is required for every table in the schema. Annoyingly, everytime you do a push to the database, you need to enable RLS again. To do so: 
-    <ul className='prose text-white list-disc list-inside'>
+    <ul className='text-white list-disc list-inside'>
     <li>Go to <a href="https://github.com/Acrylic125/fntu/blob/main/scraper/enable-rls.sql" target="_blank" rel="noopener noreferrer" className='underline'>enable-rls.sql</a> and copy the script.</li>
     <li>Go to `SQL Editor` in Supabase, paste the script and run it.</li>
     </ul>

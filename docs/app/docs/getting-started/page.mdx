@@ -14,12 +14,12 @@ import {
 The project distills NTU's data into a structured format, and makes it easy to use in your projects.
 
 There are 3 ways to access the data:
-<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0">
+<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0 ">
       <TableHeader>
         <TableRow>
           <TableHead className="w-8">#</TableHead>
           <TableHead colSpan={1}>Method</TableHead>
-          <TableHead colSpan={4}>Use Cases</TableHead>
+          <TableHead colSpan={3}>Use Cases</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -28,12 +28,16 @@ There are 3 ways to access the data:
             1
             </TableCell>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [API Playground](/docs/playground)
+            </div>
             </TableCell>
-            <TableCell colSpan={4}>
-            - Explore what data is available.
-            - Use as a reference for your own projects.
-            - Hack up prototypes.
+            <TableCell colSpan={3}>
+            <div className='w-full text-wrap'>
+                - Explore what data is available.
+                - Use as a reference for your own projects.
+                - Hack up prototypes.
+            </div>
             </TableCell>
         </TableRow>
         <TableRow>
@@ -41,12 +45,16 @@ There are 3 ways to access the data:
             2
             </TableCell>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [Download the Data](/docs/download)
+            </div>
             </TableCell>
-            <TableCell colSpan={4}>
+            <TableCell colSpan={3}>
+            <div className='w-full text-wrap'>
             - Analyze the raw data.
             - Manage the data to meet your needs.
             - Hack up prototypes, giving flexibility to querying.
+            </div>
             </TableCell>
         </TableRow>
         <TableRow>
@@ -54,11 +62,15 @@ There are 3 ways to access the data:
             3
             </TableCell>
             <TableCell colSpan={1}>
+            <div className='w-full text-wrap'>
             [Scrape the Data](/docs/scraper)
+            </div>
             </TableCell>
-            <TableCell colSpan={4}>
+            <TableCell colSpan={3}>
+            <div className='w-full text-wrap'>
             - Add/Modify fields to the raw data.
             - Postprocess the data to meet your needs.
+            </div>
             </TableCell>
         </TableRow>
     </TableBody>

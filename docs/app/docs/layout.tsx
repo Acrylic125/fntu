@@ -1,6 +1,18 @@
 import { MainNavbar } from "@/components/navbar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { MenuIcon } from "lucide-react";
 
 const sections = [
   {
@@ -57,8 +69,8 @@ export default function DocsLayout({
   return (
     <div className="w-full flex flex-col">
       <MainNavbar />
-      <div className="flex flex-row">
-        <ScrollArea className="w-64 h-[calc(100vh-64px)] border-r border-border">
+      <div className="relative flex flex-row">
+        <ScrollArea className="hidden lg:block w-64 h-[calc(100vh-64px)] border-r border-border">
           <div className="flex flex-col gap-8 p-4 md:px-8">
             {sections.map((section) => (
               <div key={section.title} className="flex flex-col gap-2">
@@ -81,6 +93,37 @@ export default function DocsLayout({
             </div>
           </div>
         </ScrollArea>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button
+              variant="secondary"
+              className="lg:hidden absolute top-4 left-4"
+            >
+              <MenuIcon />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left">
+            <ScrollArea className="h-svh">
+              <SheetHeader>
+                <SheetTitle className="sr-only">Documentation</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-8 p-8">
+                {sections.map((section) => (
+                  <div key={section.title} className="flex flex-col gap-2">
+                    <h2 className="text-lg font-bold">{section.title}</h2>
+                    <div className="flex flex-col gap-2">
+                      {section.pages.map((page) => (
+                        <Link key={page.href} href={page.href}>
+                          {page.title}
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </SheetContent>
+        </Sheet>
       </div>
     </div>
   );
