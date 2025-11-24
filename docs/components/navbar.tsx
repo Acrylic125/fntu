@@ -22,28 +22,28 @@ export function MainNavbar() {
             <Button
               variant="ghost"
               asChild
-              className="text-left flex flex-row items-center px-2"
+              className="text-left flex flex-row items-center px-2 text-sm"
             >
               <Link href="/docs/getting-started">Docs</Link>
             </Button>
             <Button
               variant="ghost"
               asChild
-              className="text-left flex flex-row items-center px-2"
+              className="text-left flex flex-row items-center px-2 text-sm"
             >
-              <Link href="/dashboard/api-keys">API Keys</Link>
+              <Link href="/dashboard/api-keys">API</Link>
             </Button>
             <Button
               variant="ghost"
               asChild
-              className="text-left flex flex-row items-center px-2"
+              className="text-left flex flex-row items-center px-2 text-sm"
             >
               <a
                 href="https://fntu-api.benapps.dev"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <p>API Playground</p>
+                <p>Playground</p>
               </a>
             </Button>
           </div>

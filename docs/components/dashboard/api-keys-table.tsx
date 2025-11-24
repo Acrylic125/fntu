@@ -313,12 +313,18 @@ export function CreateAPIKeyDialog() {
         </DialogHeader>
 
         {createAPIKeyMutation.isSuccess && (
-          <div className="w-full flex flex-row justify-between items-center gap-2">
-            <div className="max-w-80 truncate">
-              {createAPIKeyMutation.data.token}
+          <>
+            <div className="w-full flex flex-row justify-between items-center gap-2">
+              <div className="max-w-80 truncate">
+                {createAPIKeyMutation.data.token}
+              </div>
+              <CopyButton token={createAPIKeyMutation.data.token} withText />
             </div>
-            <CopyButton token={createAPIKeyMutation.data.token} withText />
-          </div>
+            <Alert variant="success">
+              <AlertTitle>Success</AlertTitle>
+              <AlertDescription>API key created successfully.</AlertDescription>
+            </Alert>
+          </>
         )}
         {createAPIKeyMutation.isError && (
           <Alert variant="destructive">

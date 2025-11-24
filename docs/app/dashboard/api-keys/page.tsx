@@ -2,6 +2,7 @@ import {
   APIKeysTable,
   CreateAPIKeyDialog,
 } from "@/components/dashboard/api-keys-table";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
@@ -33,6 +34,13 @@ export default async function APIKeysPage() {
           <CreateAPIKeyDialog />
         </div>
       </div>
+      <Alert variant="warning">
+        <AlertTitle>Heavy Limitations!</AlertTitle>
+        <AlertDescription className="text-xs md:text-sm lg:text-base">
+          The playground is intended for experimentation and learning. Please
+          for production use.
+        </AlertDescription>
+      </Alert>
       <APIKeysTable />
     </div>
   );
