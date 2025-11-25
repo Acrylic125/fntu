@@ -6,8 +6,6 @@ import {
   MapsindoorsLocationSchema,
 } from "./schema";
 import { z } from "zod";
-import path from "path";
-import { SCHOOLS_WITH_MAPPINGS } from "./scrape-schools";
 
 const MapsindoorsLocationArraySchema = z.array(MapsindoorsLocationSchema);
 const LocationsArraySchema = z.array(LocationSchema);

@@ -44,7 +44,7 @@ async function _downloadCourseSchedules(
 
   let i = 0;
   console.log(
-    `Downloading ${sources.length} course schedules. Will take ~${((sources.length * options.gapBetweenRequests[0]) / 1000).toFixed(2)} seconds.`
+    `Downloading ${sources.length} course schedules. Will take ~${((sources.length * (options.gapBetweenRequests[0] + options.gapBetweenRequests[1])) / 2 / 1000).toFixed(2)} seconds.`
   );
   for (const source of sources) {
     const formData = createFormData(source, options.acadsem);

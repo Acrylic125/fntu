@@ -8,7 +8,7 @@ import {
   Index,
   Course,
   ClassSchema,
-  ProgramCoursesSchema,
+  CourseScheduleSchema,
   MetadataSchema,
   CourseCode,
 } from "../schema";
@@ -140,7 +140,7 @@ function scrapePageForCourses(html: string) {
 
           // Validate with Zod
           try {
-            ProgramCoursesSchema.parse(courseData);
+            CourseScheduleSchema.parse(courseData);
             results.push(courseData);
           } catch (error) {
             console.warn(

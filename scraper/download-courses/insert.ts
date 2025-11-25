@@ -1,9 +1,4 @@
-import {
-  ProgramCourseListSchema as ClassesSchema,
-  MetadataSchema,
-  Days,
-  ProgramSourceSchema,
-} from "../schema";
+import { Days, ProgramSourceSchema, CourseScheduleListSchema } from "../schema";
 import {
   courseIndexClassesTable,
   courseIndexSourcesTable,
@@ -27,7 +22,7 @@ async function getPrograms(filepath: string) {
 }
 
 async function getScrapedResults(filepath: string) {
-  const all = ClassesSchema.parse(
+  const all = CourseScheduleListSchema.parse(
     JSON.parse(fs.readFileSync(filepath, "utf8"))
   );
   return all;
@@ -63,6 +58,10 @@ async function doProgramsInsert(
           ip.type === p.type
       )
   );
+  if (programsToInsert.length === 0) {
+    console.log("No programs to insert");
+    return;
+  }
   await db.insert(programsTable).values(programsToInsert);
   console.log("Programs inserted");
 }

@@ -17,11 +17,12 @@ import { parse } from "pg-connection-string";
 import { downloadMapIndoors } from "./download-locations/download-mapindoors";
 import { scrapeNSSSArcHiveFacilities } from "./download-locations/scrape-ns-ss-arc-hive-facilities";
 import { scrapeSchoolsFacilitiesMappings } from "./download-locations/scrape-schools";
-import { transformLocations } from "./download-locations/locations-transform";
+import { transformLocations } from "./download-locations/transofrm-locations";
 import {
   insertLocations,
   LOCATIONS_INSERTION_OPTIONS,
 } from "./download-locations/insert";
+import { transformSchedules } from "./download-courses/transform-schedules";
 dotenv.config();
 
 type Db = ReturnType<typeof getDb>;
@@ -282,6 +283,32 @@ program
       console.log("Scraped complete.");
     }
 
+    // Transform course schedules.
+    const transformSchedulesPath = path.resolve(
+      sourcesAcadYearDir,
+      "all-schedules-transformed.json"
+    );
+    const transformSchedulesFolderExists = fs.existsSync(
+      transformSchedulesPath
+    );
+    let confirmTransformSchedules = !transformSchedulesFolderExists;
+    if (!skipOptional && transformSchedulesFolderExists) {
+      let response = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message:
+            "Do you want to transform course schedules again? You already have this file.",
+        },
+      ]);
+      confirmTransformSchedules = response.confirm;
+    }
+    if (confirmTransformSchedules) {
+      console.log("Transforming course schedules from NTU");
+      transformSchedules(scrapeSchedulesPath, transformSchedulesPath);
+      console.log("Transformed complete.");
+    }
+
     // Insert data into database.
     console.log("Inserting data into database");
     console.log("");
@@ -293,10 +320,10 @@ program
 
     await inquireInsertCourses(db, {
       programsPath: scrapeProgramsPath,
-      allSchedulesPath: scrapeSchedulesPath,
+      allSchedulesPath: transformSchedulesPath,
       ay,
     });
-    console.log("Success! You may CTRL+C to exit.");
+    console.log("Completed! You may CTRL+C to exit.");
   });
 
 program
@@ -466,7 +493,7 @@ program
       locationsTransformPath: locationsTransformPath,
     });
 
-    console.log("Success! You may CTRL+C to exit.");
+    console.log("Completed! You may CTRL+C to exit.");
   });
 
 program
@@ -515,7 +542,7 @@ program
         locationsTransformPath,
       });
     }
-    console.log("Success! You may CTRL+C to exit.");
+    console.log("Completed! You may CTRL+C to exit.");
   });
 
 program.parse(process.argv);

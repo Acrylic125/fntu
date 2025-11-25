@@ -43,7 +43,7 @@ export const IndexSchema = z.object({
   ),
 });
 
-export const ProgramCoursesSchema = z.object({
+export const CourseScheduleSchema = z.object({
   course: z.object({
     code: z.string(),
     name: z.string(),
@@ -52,7 +52,7 @@ export const ProgramCoursesSchema = z.object({
   indices: z.array(IndexSchema),
 });
 
-export const ProgramCourseListSchema = z.array(ProgramCoursesSchema);
+export const CourseScheduleListSchema = z.array(CourseScheduleSchema);
 
 export const ProgramSchema = z.object({
   name: z.string(),
@@ -84,7 +84,7 @@ export type Time = z.infer<typeof TimeSchema>;
 export type Day = z.infer<typeof DaySchema>;
 export type Class = z.infer<typeof ClassSchema>;
 export type Index = z.infer<typeof IndexSchema>;
-export type Course = z.infer<typeof ProgramCoursesSchema>;
+export type Course = z.infer<typeof CourseScheduleSchema>;
 
 export type Program = z.infer<typeof ProgramSchema>;
 export type MetadataEntry = z.infer<typeof MetadataEntrySchema>;
