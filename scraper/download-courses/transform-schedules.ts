@@ -16,7 +16,13 @@ export function transformSchedules(
         // Remove starting and ending ', ", `, /
         cls.venue = cls.venue.replace(/^(`|'|"|\/)+|(`|'|"|\/)+$/g, "");
         // Replace EXAMHALL with Exam Hall.
-        cls.venue = cls.venue.replace("EXAMHALL", "Exam Hall");
+        if (new RegExp("EXAMHALL[A-Za-z0-9]+$").test(cls.venue)) {
+          const [, room] = cls.venue.split("EXAMHALL");
+          cls.venue = `Exam Hall ${room}`;
+        }
+        if (cls.venue.includes("EXAMHALL")) {
+          cls.venue = cls.venue.replace("EXAMHALL", "Exam Hall");
+        }
       });
     });
   }
