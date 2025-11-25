@@ -156,6 +156,12 @@ function mapByName(name: string, mappings: Record<string, string>) {
     altNames.push(`SBS-CR${room}`);
   }
 
+  // Exam Hall
+  if (name.match(new RegExp(`Exam Hall [A-Za-z0-9] - .+$`))) {
+    const [, , room] = name.split(" ");
+    altNames.push(`Exam Hall ${room}`);
+  }
+
   const nameMapping = mappings[name];
   if (nameMapping) {
     altNames.push(nameMapping);
