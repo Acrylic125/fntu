@@ -7,6 +7,9 @@ const components: MDXComponents = {
   // h4: ({ children }) => <h4 className="text-base font-bold">{children}</h4>,
   // h5: ({ children }) => <h5 className="text-sm font-bold">{children}</h5>,
   // p: ({ children }) => <p className="text-base">{children}</p>,
+  pre: ({ children }) => (
+    <pre className="w-[calc(100vw-2rem)] overflow-auto">{children}</pre>
+  ),
   a: ({ children, href }) => (
     <a href={href} target="_blank" rel="noopener noreferrer">
       {children}
