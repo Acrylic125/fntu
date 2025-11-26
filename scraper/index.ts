@@ -23,7 +23,23 @@ import {
   LOCATIONS_INSERTION_OPTIONS,
 } from "./download-locations/insert";
 import { transformSchedules } from "./download-courses/transform-schedules";
+import z from "zod";
 dotenv.config();
+
+const BundleSchema = z.object({
+  version: z.literal("1"),
+  locationsFilePath: z.string(),
+  coursesPaths: z
+    .object({
+      allSchedulesPath: z.string(),
+      programsPath: z.string(),
+      aySem: z.object({
+        sem: z.string(),
+        ay: z.string(),
+      }),
+    })
+    .array(),
+});
 
 type Db = ReturnType<typeof getDb>;
 
@@ -32,7 +48,7 @@ async function inquireInsertCourses(
   options: {
     programsPath: string;
     allSchedulesPath: string;
-    ay: { yearCode: string; sem: string };
+    aySem: { ay: string; sem: string };
   }
 ) {
   const courseInsertOptions = await inquirer.prompt([
@@ -44,7 +60,7 @@ async function inquireInsertCourses(
     },
   ]);
 
-  await insertCourses(db, options.ay.yearCode, options.ay.sem, {
+  await insertCourses(db, options.aySem.ay, options.aySem.sem, {
     programsPath: options.programsPath,
     allSchedulesPath: options.allSchedulesPath,
     options: courseInsertOptions.options,
@@ -112,23 +128,30 @@ async function inquireDb() {
   return db;
 }
 
+const SUPPORTED_AY = [
+  {
+    year: "2025",
+    ay: "25/26",
+    sem: "2",
+  },
+  {
+    year: "2025",
+    ay: "25/26",
+    sem: "1",
+  },
+];
+
 async function inquirerAcadSemester() {
-  return await inquirer.prompt([
+  return await inquirer.prompt<{ aySem: (typeof SUPPORTED_AY)[number] }>([
     {
       type: "select",
-      name: "acadSemester",
-      message: "What acad semester are you downloading?.",
-      choices: [
-        {
-          name: `AY 25/26 S2`,
-          value: { year: "2025", yearCode: "25/26", sem: "2" },
-        },
-        {
-          name: `AY 25/26 S1`,
-          value: { year: "2025", yearCode: "25/26", sem: "1" },
-        },
-      ],
-      default: `AY 25/26 S2`,
+      name: "aySem",
+      message: "What acad year and semester are you downloading?.",
+      choices: SUPPORTED_AY.map((ay) => ({
+        name: `AY ${ay.ay} S${ay.sem}`,
+        value: ay,
+      })),
+      // default: SUPPORTED_AY[0],
     },
   ]);
 }
@@ -152,13 +175,13 @@ program
       fs.mkdirSync(outDir, { recursive: true });
     }
 
-    const { acadSemester: ay } = await inquirerAcadSemester();
+    const { aySem } = await inquirerAcadSemester();
 
     // Download program data sources.
     const sourcesBaseDir = path.resolve(outDir, "data-sources");
     const sourcesAcadYearDir = path.resolve(
       sourcesBaseDir,
-      `${ay.year}-${ay.sem}`
+      `${aySem.year}-${aySem.sem}`
     );
     const sourcesProgramFile = path.resolve(
       sourcesAcadYearDir,
@@ -185,7 +208,10 @@ program
         fs.mkdirSync(sourcesAcadYearDir, { recursive: true });
       }
       console.log("Downloading data sources from NTU");
-      await downloadDataSources(`${ay.year};${ay.sem}`, sourcesProgramFile);
+      await downloadDataSources(
+        `${aySem.year};${aySem.sem}`,
+        sourcesProgramFile
+      );
 
       console.log("Downloaded complete.");
     }
@@ -249,7 +275,7 @@ program
         scrapeProgramsPath,
         downloadSchedulesPath,
         downloadSchedulesMetadataPath,
-        `${ay.year};${ay.sem}`
+        `${aySem.year};${aySem.sem}`
       );
       console.log("Downloaded complete.");
     }
@@ -321,7 +347,7 @@ program
     await inquireInsertCourses(db, {
       programsPath: scrapeProgramsPath,
       allSchedulesPath: transformSchedulesPath,
-      ay,
+      aySem: aySem,
     });
     console.log("Completed! You may CTRL+C to exit.");
   });
@@ -514,6 +540,15 @@ program
       return;
     }
 
+    const bundlePath = path.resolve(downloadPath, "bundle.json");
+    if (!fs.existsSync(bundlePath)) {
+      console.log(chalk.red(`Bundle path ${bundlePath} does not exist.`));
+      return;
+    }
+    const bundle = BundleSchema.parse(
+      JSON.parse(fs.readFileSync(bundlePath, "utf8"))
+    );
+
     const options = ["Courses", "Locations"] as const;
     const { options: selectedOptions } = await inquirer.prompt([
       {
@@ -524,25 +559,119 @@ program
       },
     ]);
     if (selectedOptions.includes("Courses")) {
-      const { acadSemester: ay } = await inquirerAcadSemester();
-      const programsPath = path.resolve(downloadPath, "programs.json");
-      const allSchedulesPath = path.resolve(downloadPath, "all-schedules.json");
-      await inquireInsertCourses(db, {
-        programsPath: programsPath,
-        allSchedulesPath,
-        ay,
-      });
+      const { selectedAySems } = await inquirer.prompt<{
+        selectedAySems: z.infer<typeof BundleSchema>["coursesPaths"][number][];
+      }>([
+        {
+          type: "checkbox",
+          name: "selectedAySems",
+          message: "What acad year and semesters are you inserting?",
+          choices: bundle.coursesPaths.map((coursePath) => ({
+            name: `AY ${coursePath.aySem.ay} S${coursePath.aySem.sem}`,
+            value: coursePath,
+          })),
+        },
+      ]);
+      for (const selectedAySem of selectedAySems) {
+        console.log("");
+        console.log(
+          chalk.bold(
+            `Requesting to insert courses/programs for ${selectedAySem.aySem.ay} S${selectedAySem.aySem.sem}...`
+          )
+        );
+        const programsPath = path.resolve(
+          downloadPath,
+          selectedAySem.programsPath
+        );
+        const allSchedulesPath = path.resolve(
+          downloadPath,
+          selectedAySem.allSchedulesPath
+        );
+        await inquireInsertCourses(db, {
+          programsPath,
+          allSchedulesPath,
+          aySem: selectedAySem.aySem,
+        });
+      }
     }
     if (selectedOptions.includes("Locations")) {
+      console.log("");
+      console.log(chalk.bold(`Requesting to insert locations...`));
       const locationsTransformPath = path.resolve(
         downloadPath,
-        "locations.json"
+        bundle.locationsFilePath
       );
       await inquireInsertLocations(db, {
         locationsTransformPath,
       });
     }
     console.log("Completed! You may CTRL+C to exit.");
+  });
+
+program
+  .command("bundle")
+  .argument("bundlePath", "The path to the bundle data")
+  .argument("outputPath", "The path to the output bundle")
+  .description("Bundle up into a release download bundle")
+  .action(async (_bundlePath, _outputPath) => {
+    const bundlePath = path.resolve(_bundlePath);
+    if (!fs.existsSync(bundlePath)) {
+      console.log(chalk.red(`Bundle path ${bundlePath} does not exist.`));
+      return;
+    }
+
+    const outputPath = path.resolve(_outputPath);
+    if (!fs.existsSync(outputPath)) {
+      fs.mkdirSync(outputPath, { recursive: true });
+    }
+
+    // Copy from, Copy to
+    const copyFilePaths: [string, string][] = [
+      ["locations/transform.json", "locations/locations.json"],
+    ];
+    const bundle: z.infer<typeof BundleSchema> = {
+      version: "1",
+      locationsFilePath: "locations/locations.json",
+      coursesPaths: [],
+    };
+    for (const aySem of SUPPORTED_AY) {
+      copyFilePaths.push([
+        `${aySem.year}-${aySem.sem}/programs.json`,
+        `${aySem.year}-${aySem.sem}/programs.json`,
+      ]);
+      copyFilePaths.push([
+        `${aySem.year}-${aySem.sem}/all-schedules-transformed.json`,
+        `${aySem.year}-${aySem.sem}/all-schedules.json`,
+      ]);
+      bundle.coursesPaths.push({
+        allSchedulesPath: `${aySem.year}-${aySem.sem}/all-schedules.json`,
+        programsPath: `${aySem.year}-${aySem.sem}/programs.json`,
+        aySem: {
+          ay: aySem.ay,
+          sem: aySem.sem,
+        },
+      });
+    }
+
+    for (const [from, to] of copyFilePaths) {
+      const fromPath = path.resolve(bundlePath, from);
+      const toPath = path.resolve(outputPath, to);
+      if (!fs.existsSync(fromPath)) {
+        console.log(chalk.red(`From path ${fromPath} does not exist.`));
+        continue;
+      }
+      const toDir = path.dirname(toPath);
+      if (!fs.existsSync(toDir)) {
+        fs.mkdirSync(toDir, { recursive: true });
+      }
+      fs.copyFileSync(fromPath, toPath);
+    }
+
+    fs.writeFileSync(
+      path.resolve(outputPath, "bundle.json"),
+      JSON.stringify(bundle, null, 2)
+    );
+    console.log(chalk.green("Completed!"));
   });
 
 program.parse(process.argv);
