@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node --loader ts-node/esm index.ts"
+    "start": "tsx index.ts"
   },
   "keywords": [],
   "author": "",

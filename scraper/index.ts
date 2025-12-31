@@ -14,7 +14,7 @@ import {
 import dotenv from "dotenv";
 import { getDb } from "./db";
 import { parse } from "pg-connection-string";
-import { downloadMapIndoors } from "./download-locations/download-mapindoors";
+import { downloadLocations } from "./download-locations/download-mazemap";
 import { scrapeNSSSArcHiveFacilities } from "./download-locations/scrape-ns-ss-arc-hive-facilities";
 import { scrapeSchoolsFacilitiesMappings } from "./download-locations/scrape-schools";
 import { transformLocations } from "./download-locations/transofrm-locations";
@@ -371,21 +371,13 @@ program
 
     // Download locations from Mapindoors.
     const locationsMapIndoorsDir = path.resolve(locationsBaseDir, "mapindoors");
-    const locationsMetadataPath = path.resolve(
+    const locationsRawDataPath = path.resolve(
       locationsBaseDir,
-      "metadata.json"
+      "raw-data.json"
     );
-    const locationsMetadataExists = fs.existsSync(locationsMetadataPath);
-    const locationsMapIndoorsFolderExists = fs.existsSync(
-      locationsMapIndoorsDir
-    );
-    let confirmDownloadLocations =
-      !locationsMapIndoorsFolderExists || !locationsMetadataExists;
-    if (
-      !skipOptional &&
-      locationsMapIndoorsFolderExists &&
-      locationsMetadataExists
-    ) {
+    const locationsRawDataExists = fs.existsSync(locationsRawDataPath);
+    let confirmDownloadLocations = !locationsRawDataExists;
+    if (!skipOptional && locationsRawDataExists) {
       let response = await inquirer.prompt([
         {
           type: "confirm",
@@ -402,8 +394,11 @@ program
         fs.mkdirSync(locationsMapIndoorsDir, { recursive: true });
       }
       console.log("Downloading locations from NTU");
-      await downloadMapIndoors(locationsMapIndoorsDir, locationsMetadataPath);
+      await downloadLocations(locationsRawDataPath);
       console.log("Downloaded complete.");
+    }
+    if (true) {
+      return;
     }
 
     // Scrape locations from NS/SS/Arc/Hive (mainFacilitiesMappings)
@@ -500,10 +495,10 @@ program
     }
     if (confirmTransformLocations) {
       console.log("Transforming locations from NTU");
-      await transformLocations(locationsMetadataPath, locationsTransformPath, {
-        roomIdMappingsPath: locationsMainFacilitiesMappingsPath,
-        nameMappingsPath: locationsSchoolFacilitiesMappingsPath,
-      });
+      // await transformLocations(locationsMetadataPath, locationsTransformPath, {
+      //   roomIdMappingsPath: locationsMainFacilitiesMappingsPath,
+      //   nameMappingsPath: locationsSchoolFacilitiesMappingsPath,
+      // });
       console.log("Transformed complete.");
     }
 
@@ -515,9 +510,9 @@ program
     if (!db) {
       return;
     }
-    await inquireInsertLocations(db, {
-      locationsTransformPath: locationsTransformPath,
-    });
+    // await inquireInsertLocations(db, {
+    //   locationsTransformPath: locationsTransformPath,
+    // });
 
     console.log("Completed! You may CTRL+C to exit.");
   });
