@@ -17,7 +17,6 @@ import { parse } from "pg-connection-string";
 import { downloadLocations } from "./download-locations/download-mazemap";
 import { scrapeNSSSArcHiveFacilities } from "./download-locations/scrape-ns-ss-arc-hive-facilities";
 import { scrapeSchoolsFacilitiesMappings } from "./download-locations/scrape-schools";
-import { transformLocations } from "./download-locations/transofrm-locations";
 import {
   insertLocations,
   LOCATIONS_INSERTION_OPTIONS,
@@ -397,6 +396,18 @@ program
       await downloadLocations(locationsRawDataPath);
       console.log("Downloaded complete.");
     }
+
+    // Insert data into database.
+    console.log("Inserting data into database");
+    console.log("");
+
+    const db = await inquireDb();
+    if (!db) {
+      return;
+    }
+    await inquireInsertLocations(db, {
+      locationsTransformPath: locationsRawDataPath,
+    });
     if (true) {
       return;
     }
@@ -506,10 +517,10 @@ program
     console.log("Inserting data into database");
     console.log("");
 
-    const db = await inquireDb();
-    if (!db) {
-      return;
-    }
+    // const db = await inquireDb();
+    // if (!db) {
+    //   return;
+    // }
     // await inquireInsertLocations(db, {
     //   locationsTransformPath: locationsTransformPath,
     // });

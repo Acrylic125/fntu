@@ -75,9 +75,8 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
       typeToIdMap.set(type.name, type.id);
     }
 
-    const mazeMapPoiIdToLocationIdMap = new Map<number, number>();
     for (const { batch, end } of batchIteration(1000, all.length)) {
-      const ids = await db
+      await db
         .insert(locationsTable)
         .values(
           all.slice(batch, end).map((l) => {
@@ -99,14 +98,21 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
             };
           })
         )
-        .onConflictDoNothing()
-        .returning({
-          id: locationsTable.id,
-          mazeMapPoiId: locationsTable.mazeMapPoiId,
-        });
-      for (const id of ids) {
-        mazeMapPoiIdToLocationIdMap.set(id.mazeMapPoiId, id.id);
-      }
+        .onConflictDoNothing();
+      // .returning({
+      //   id: locationsTable.id,
+      //   mazeMapPoiId: locationsTable.mazeMapPoiId,
+      // });
+      // console.log(`Inserted ${ids.length} locations`);
+      // for (const id of ids) {
+      //   mazeMapPoiIdToLocationIdMap.set(id.mazeMapPoiId, id.id);
+      // }
+    }
+
+    const mazeMapPoiIdToLocationIdMap = new Map<number, number>();
+    const locations = await db.select().from(locationsTable);
+    for (const location of locations) {
+      mazeMapPoiIdToLocationIdMap.set(location.mazeMapPoiId, location.id);
     }
 
     const toInsertTypes: { typeId: number; locationId: number }[] = [];
@@ -284,13 +290,4 @@ export async function insertLocations(
   if (options.options.includes("Locations")) {
     await doInsertLocations(db, all);
   }
-  // if (options.options.includes("Locations")) {
-  //   await doInsertLocations(db, all);
-  // }
-  // if (options.options.includes("Locations Alt Names")) {
-  //   await doInsertLocationAltNames(db, all);
-  // }
-  // if (options.options.includes("Locations Geometry")) {
-  //   await doInsertLocationGeometry(db, all);
-  // }
 }

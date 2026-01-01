@@ -124,9 +124,9 @@ export const locationsTable = pgTable(
   "locations",
   {
     id: serial().notNull().primaryKey(),
-    name: varchar({ length: 255 }).notNull(),
+    name: varchar({ length: 255 }),
     description: varchar({ length: 1024 }),
-    building: varchar({ length: 64 }),
+    building: varchar({ length: 255 }),
     floorName: varchar({ length: 64 }),
     campusId: integer()
       .notNull()
