@@ -124,23 +124,73 @@ export const locationsTable = pgTable(
   "locations",
   {
     id: serial().notNull().primaryKey(),
-    category: varchar({ length: 64 }).notNull(),
     name: varchar({ length: 255 }).notNull(),
+    description: varchar({ length: 1024 }),
     building: varchar({ length: 64 }),
-    floor: varchar({ length: 32 }).notNull(),
-    floorName: varchar({ length: 64 }).notNull(),
-    venue: varchar({ length: 32 }).notNull(),
-    type: varchar({ length: 32 }).notNull(),
-    imageUrl: varchar({ length: 256 }),
-    mapIndoorsId: varchar({ length: 64 }).notNull(),
-    mapIndoorsRoomId: varchar({ length: 64 }),
+    floorName: varchar({ length: 64 }),
+    campusId: integer()
+      .notNull()
+      .references(() => campusTable.id, { onDelete: "cascade" }),
+    mazeMapPoiId: integer().unique().notNull(),
+    mazeMapIdentifier: varchar({ length: 64 }),
+    mazeMapInfoUrl: varchar({ length: 512 }),
+  }
+  // (t) => [unique("idx_locations_mazeMapPoiId").on(t.mazeMapPoiId)]
+);
+
+export const campusTable = pgTable(
+  "campuses",
+  {
+    id: serial().notNull().primaryKey(),
+    name: varchar({ length: 32 }).notNull(),
+    mazeMapId: varchar({ length: 64 }).notNull(),
+    mazeMapCampusId: integer().notNull(),
+  },
+  (t) => [unique("idx_campuses_name").on(t.name)]
+);
+
+export const locationTypesTable = pgTable(
+  "location_types",
+  {
+    id: serial().notNull().primaryKey(),
+    name: varchar({ length: 32 }).notNull(),
+  },
+  (t) => [unique("idx_location_types_name").on(t.name)]
+);
+
+export const locationTypeLocationsTable = pgTable(
+  "location_type_locations",
+  {
+    id: serial().notNull().primaryKey(),
+    locationId: integer()
+      .notNull()
+      .references(() => locationsTable.id, { onDelete: "cascade" }),
+    typeId: integer()
+      .notNull()
+      .references(() => locationTypesTable.id, { onDelete: "cascade" }),
   },
   (t) => [
-    unique("idx_locations_mapIndoorsId_mapIndoorsRoomId").on(
-      t.mapIndoorsId,
-      t.mapIndoorsRoomId
+    unique("idx_location_type_locations_locationId_typeId").on(
+      t.locationId,
+      t.typeId
     ),
-    unique("idx_locations_name").on(t.name),
+  ]
+);
+
+export const locationImagesTable = pgTable(
+  "location_images",
+  {
+    id: serial().notNull().primaryKey(),
+    locationId: integer()
+      .notNull()
+      .references(() => locationsTable.id, { onDelete: "cascade" }),
+    imageUrl: varchar({ length: 256 }).notNull(),
+  },
+  (t) => [
+    unique("idx_location_images_locationId_imageUrl").on(
+      t.locationId,
+      t.imageUrl
+    ),
   ]
 );
 

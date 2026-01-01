@@ -1,10 +1,10 @@
-import path from "path";
 import fs from "fs";
-import { LocationsRawDataSchema } from "./schema";
+import { LocationsRawData, LocationsRawDataSchema } from "./schema";
 import {
-  locationAltNamesTable,
-  locationGeometryTable,
+  campusTable,
   locationsTable,
+  locationTypesTable,
+  locationTypeLocationsTable,
 } from "../db/schema";
 import { getDb } from "../db";
 
@@ -15,6 +15,125 @@ function* batchIteration(batchSize: number, total: number) {
     const batch = i;
     const end = Math.min(i + batchSize, total);
     yield { batch, end };
+  }
+}
+
+async function getLocationsRawData(filePath: string) {
+  const all = LocationsRawDataSchema.parse(
+    JSON.parse(fs.readFileSync(filePath, "utf8"))
+  );
+  return all;
+}
+
+async function doInsertCampuses(db: Db, all: LocationsRawData) {
+  try {
+    const campuses = new Set<string>();
+    for (const l of all) {
+      campuses.add(l.campus.name);
+    }
+    await db
+      .insert(campusTable)
+      .values(
+        Array.from(campuses).map((c) => ({
+          name: c,
+          mazeMapId: c,
+          mazeMapCampusId: 0,
+        }))
+      )
+      .onConflictDoNothing();
+    console.log("Campuses inserted");
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function doInsertLocationsTypes(db: Db, all: LocationsRawData) {
+  try {
+    const locationTypes = new Set(
+      all.flatMap((l) => l.types.map((t) => t.name))
+    );
+    await db
+      .insert(locationTypesTable)
+      .values(Array.from(locationTypes).map((t) => ({ name: t })))
+      .onConflictDoNothing();
+    console.log("Locations Types inserted");
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function doInsertLocations(db: Db, all: LocationsRawData) {
+  try {
+    const campuses = await db.select().from(campusTable);
+    const campusToIdMap = new Map<string, number>();
+    for (const campus of campuses) {
+      campusToIdMap.set(campus.name, campus.id);
+    }
+    const types = await db.select().from(locationTypesTable);
+    const typeToIdMap = new Map<string, number>();
+    for (const type of types) {
+      typeToIdMap.set(type.name, type.id);
+    }
+
+    const mazeMapPoiIdToLocationIdMap = new Map<number, number>();
+    for (const { batch, end } of batchIteration(1000, all.length)) {
+      const ids = await db
+        .insert(locationsTable)
+        .values(
+          all.slice(batch, end).map((l) => {
+            const campusId = campusToIdMap.get(l.campus.name);
+            if (!campusId) {
+              throw new Error(
+                `Campus ${l.campus.name} not found. Please insert the campus first.`
+              );
+            }
+            return {
+              name: l.title,
+              description: l.description,
+              floorName: l.floorName,
+              building: l.buildingName,
+              campusId,
+              mazeMapPoiId: l.poiId,
+              mazeMapIdentifier: l.identifier,
+              mazeMapInfoUrl: l.infoUrl,
+            };
+          })
+        )
+        .onConflictDoNothing()
+        .returning({
+          id: locationsTable.id,
+          mazeMapPoiId: locationsTable.mazeMapPoiId,
+        });
+      for (const id of ids) {
+        mazeMapPoiIdToLocationIdMap.set(id.mazeMapPoiId, id.id);
+      }
+    }
+
+    const toInsertTypes: { typeId: number; locationId: number }[] = [];
+    for (const l of all) {
+      const locationId = mazeMapPoiIdToLocationIdMap.get(l.poiId);
+      if (!locationId) {
+        throw new Error(
+          `Location ${l.poiId} not found. Please insert the location first. (This should not happen)`
+        );
+      }
+      for (const type of l.types) {
+        const typeId = typeToIdMap.get(type.name);
+        if (!typeId) {
+          throw new Error(
+            `Type ${type.name} not found. Please insert the location types first.`
+          );
+        }
+        toInsertTypes.push({ typeId, locationId });
+      }
+    }
+    await db
+      .insert(locationTypeLocationsTable)
+      .values(toInsertTypes)
+      .onConflictDoNothing();
+    console.log("Locations inserted");
+  } catch (error) {
+    console.log(error);
   }
 }
 
@@ -141,9 +260,11 @@ function* batchIteration(batchSize: number, total: number) {
 // }
 
 export const LOCATIONS_INSERTION_OPTIONS = [
+  "Locations Types",
+  "Locations Campuses",
   "Locations",
-  "Locations Alt Names",
-  "Locations Geometry",
+  // "Locations Alt Names",
+  // "Locations Geometry",
 ] as const;
 
 export async function insertLocations(
@@ -153,7 +274,16 @@ export async function insertLocations(
     options: (typeof LOCATIONS_INSERTION_OPTIONS)[number][];
   }
 ) {
-  // const all = await getLocations(options.locationsTransformPath);
+  const all = await getLocationsRawData(options.locationsTransformPath);
+  if (options.options.includes("Locations Campuses")) {
+    await doInsertCampuses(db, all);
+  }
+  if (options.options.includes("Locations Types")) {
+    await doInsertLocationsTypes(db, all);
+  }
+  if (options.options.includes("Locations")) {
+    await doInsertLocations(db, all);
+  }
   // if (options.options.includes("Locations")) {
   //   await doInsertLocations(db, all);
   // }

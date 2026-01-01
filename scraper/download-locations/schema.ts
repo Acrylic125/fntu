@@ -40,7 +40,7 @@ const PoiSchema = z.object({
   buildingName: z.string().nullable(),
   identifierId: z.number().nullable(),
   identifier: z.string().nullable(),
-  title: z.string().nullable(),
+  title: z.string(),
   deleted: z.boolean(),
   infos: z.array(PoiInfoSchema),
   types: z.array(PoiTypeSchema),
