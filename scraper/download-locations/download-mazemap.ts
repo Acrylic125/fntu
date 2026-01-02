@@ -52,24 +52,26 @@ export async function downloadLocations(locationsPath: string) {
   const locationsData: z.infer<typeof LocationsRawDataSchema> = [];
   for (const campus of campuses.campuses) {
     let fromId = 0;
-    const response = await fetch(
-      `https://api.mazemap.com/api/campus/${campus.campusId}/pois/?fromid=${fromId}`
-    );
-    const data = await response.json();
-    const res = MazeMapPOIsDataSchema.parse(data);
-    if (res.pois.length === 0) {
-      break;
+    while (true) {
+      const response = await fetch(
+        `https://api.mazemap.com/api/campus/${campus.campusId}/pois/?fromid=${fromId}`
+      );
+      const data = await response.json();
+      const res = MazeMapPOIsDataSchema.parse(data);
+      if (res.pois.length === 0) {
+        break;
+      }
+      locationsData.push(
+        ...res.pois.map((poi) => ({
+          ...poi,
+          campus: {
+            campusId: campus.campusId,
+            name: campus.name,
+          },
+        }))
+      );
+      fromId = res.pois[res.pois.length - 1].poiId + 1;
     }
-    locationsData.push(
-      ...res.pois.map((poi) => ({
-        ...poi,
-        campus: {
-          campusId: campus.campusId,
-          name: campus.name,
-        },
-      }))
-    );
-    fromId = res.pois[res.pois.length - 1].poiId + 1;
   }
   fs.writeFileSync(locationsPath, JSON.stringify(locationsData, null, 2));
 }

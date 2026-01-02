@@ -23,6 +23,7 @@ import {
 } from "./download-locations/insert";
 import { transformSchedules } from "./download-courses/transform-schedules";
 import z from "zod";
+import { transformLocations } from "./download-locations/transofrm-locations";
 dotenv.config();
 
 const BundleSchema = z.object({
@@ -397,21 +398,6 @@ program
       console.log("Downloaded complete.");
     }
 
-    // Insert data into database.
-    console.log("Inserting data into database");
-    console.log("");
-
-    const db = await inquireDb();
-    if (!db) {
-      return;
-    }
-    await inquireInsertLocations(db, {
-      locationsTransformPath: locationsRawDataPath,
-    });
-    if (true) {
-      return;
-    }
-
     // Scrape locations from NS/SS/Arc/Hive (mainFacilitiesMappings)
     const locationsMainFacilitiesMappingsDir = path.resolve(
       locationsBaseDir,
@@ -506,10 +492,10 @@ program
     }
     if (confirmTransformLocations) {
       console.log("Transforming locations from NTU");
-      // await transformLocations(locationsMetadataPath, locationsTransformPath, {
-      //   roomIdMappingsPath: locationsMainFacilitiesMappingsPath,
-      //   nameMappingsPath: locationsSchoolFacilitiesMappingsPath,
-      // });
+      await transformLocations(locationsRawDataPath, locationsTransformPath, {
+        schoolFacilitiesMappingsPath: locationsSchoolFacilitiesMappingsPath,
+        mainFacilitiesMappingsPath: locationsMainFacilitiesMappingsPath,
+      });
       console.log("Transformed complete.");
     }
 
@@ -517,13 +503,13 @@ program
     console.log("Inserting data into database");
     console.log("");
 
-    // const db = await inquireDb();
-    // if (!db) {
-    //   return;
-    // }
-    // await inquireInsertLocations(db, {
-    //   locationsTransformPath: locationsTransformPath,
-    // });
+    const db = await inquireDb();
+    if (!db) {
+      return;
+    }
+    await inquireInsertLocations(db, {
+      locationsTransformPath: locationsRawDataPath,
+    });
 
     console.log("Completed! You may CTRL+C to exit.");
   });

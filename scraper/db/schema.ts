@@ -109,16 +109,16 @@ export const courseIndexClassesTable = pgTable("course_index_classes", {
   weeks: integer().array().notNull(),
 });
 
-export const venuesTable = pgTable("venues", {
-  id: serial().notNull().primaryKey(),
-  venue: varchar({ length: 128 }).notNull(),
-  area: varchar({ length: 128 }).notNull(),
-  capacity: integer().notNull(),
-  location: varchar({ length: 128 }).notNull(),
-  bookableByStaff: boolean().notNull().default(false),
-  bookableByStudentOrganizations: boolean().notNull().default(false),
-  remarks: varchar({ length: 128 }),
-});
+// export const venuesTable = pgTable("venues", {
+//   id: serial().notNull().primaryKey(),
+//   venue: varchar({ length: 128 }).notNull(),
+//   area: varchar({ length: 128 }).notNull(),
+//   capacity: integer().notNull(),
+//   location: varchar({ length: 128 }).notNull(),
+//   bookableByStaff: boolean().notNull().default(false),
+//   bookableByStudentOrganizations: boolean().notNull().default(false),
+//   remarks: varchar({ length: 128 }),
+// });
 
 export const locationsTable = pgTable(
   "locations",
@@ -207,19 +207,19 @@ export const locationAltNamesTable = pgTable(
   (t) => [index("idx_location_alt_names_altName").on(t.altName)]
 );
 
-export const locationGeometryTable = pgTable(
-  "location_geometry",
-  {
-    id: serial().notNull().primaryKey(),
-    locationId: integer()
-      .notNull()
-      .references(() => locationsTable.id, { onDelete: "cascade" }),
-    // Low means first, high means last.
-    order: integer().notNull(),
-    longitude: real().notNull(),
-    latitude: real().notNull(),
-  },
-  (t) => [
-    unique("idx_location_geometry_locationId_order").on(t.locationId, t.order),
-  ]
-);
+// export const locationGeometryTable = pgTable(
+//   "location_geometry",
+//   {
+//     id: serial().notNull().primaryKey(),
+//     locationId: integer()
+//       .notNull()
+//       .references(() => locationsTable.id, { onDelete: "cascade" }),
+//     // Low means first, high means last.
+//     order: integer().notNull(),
+//     longitude: real().notNull(),
+//     latitude: real().notNull(),
+//   },
+//   (t) => [
+//     unique("idx_location_geometry_locationId_order").on(t.locationId, t.order),
+//   ]
+// );

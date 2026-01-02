@@ -269,7 +269,7 @@ export const LOCATIONS_INSERTION_OPTIONS = [
   "Locations Types",
   "Locations Campuses",
   "Locations",
-  // "Locations Alt Names",
+  "Locations Alt Names",
   // "Locations Geometry",
 ] as const;
 

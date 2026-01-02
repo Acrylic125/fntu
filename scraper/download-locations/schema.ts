@@ -54,13 +54,22 @@ const PoiSchema = z.object({
 
 export const MazeMapPOIsDataSchema = z.object({
   pois: z.array(PoiSchema),
-  fromid: z.number(),
-  limit: z.number(),
 });
 
 export const LocationsRawDataSchema = z.array(
   z.object({
     ...PoiSchema.shape,
+    campus: z.object({
+      campusId: z.number(),
+      name: z.string(),
+    }),
+  })
+);
+
+export const LocationsSchema = z.array(
+  z.object({
+    ...PoiSchema.shape,
+    altNames: z.array(z.string()),
     campus: z.object({
       campusId: z.number(),
       name: z.string(),
