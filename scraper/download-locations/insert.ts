@@ -1,12 +1,18 @@
 import fs from "fs";
-import { LocationsRawData, LocationsRawDataSchema } from "./schema";
+import {
+  LocationsRawData,
+  LocationsRawDataSchema,
+  LocationsSchema,
+} from "./schema";
 import {
   campusTable,
   locationsTable,
   locationTypesTable,
   locationTypeLocationsTable,
+  locationAltNamesTable,
 } from "../db/schema";
 import { getDb } from "../db";
+import z from "zod";
 
 type Db = ReturnType<typeof getDb>;
 
@@ -18,8 +24,8 @@ function* batchIteration(batchSize: number, total: number) {
   }
 }
 
-async function getLocationsRawData(filePath: string) {
-  const all = LocationsRawDataSchema.parse(
+async function getLocationsData(filePath: string) {
+  const all = LocationsSchema.parse(
     JSON.parse(fs.readFileSync(filePath, "utf8"))
   );
   return all;
@@ -177,36 +183,42 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
 //   console.log("Locations inserted");
 // }
 
-// async function doInsertLocationAltNames(
-//   db: Db,
-//   all: Awaited<ReturnType<typeof getLocations>>
-// ) {
-//   const locations = await db.select().from(locationsTable);
-//   // Name to id mapping
-//   const nameToIdMap = new Map<string, number>();
-//   for (const location of locations) {
-//     nameToIdMap.set(location.name, location.id);
-//   }
+async function doInsertLocationAltNames(
+  db: Db,
+  all: z.infer<typeof LocationsSchema>
+) {
+  // MazeMapPoiId to location id mapping
+  const mazeMapPoiIdToLocationIdMap = new Map<number, number>();
+  const locations = await db.select().from(locationsTable);
+  for (const location of locations) {
+    mazeMapPoiIdToLocationIdMap.set(location.mazeMapPoiId, location.id);
+  }
 
-//   const toInsert = [];
-//   for (const location of all) {
-//     for (const altName of location.altNames) {
-//       toInsert.push({
-//         locationId: nameToIdMap.get(location.name)!,
-//         altName: altName,
-//       });
-//     }
-//   }
+  const toInsert = [];
+  for (const location of all) {
+    for (const altName of location.altNames) {
+      const locationId = mazeMapPoiIdToLocationIdMap.get(location.poiId);
+      if (!locationId) {
+        throw new Error(
+          `Location ${location.poiId} not found. Please insert the location first. (This should not happen)`
+        );
+      }
+      toInsert.push({
+        locationId,
+        altName: altName,
+      });
+    }
+  }
 
-//   try {
-//     for (const { batch, end } of batchIteration(1000, toInsert.length)) {
-//       await db.insert(locationAltNamesTable).values(toInsert.slice(batch, end));
-//     }
-//   } catch (error) {
-//     console.log(error);
-//   }
-//   console.log("Locations Alt names inserted");
-// }
+  try {
+    for (const { batch, end } of batchIteration(1000, toInsert.length)) {
+      await db.insert(locationAltNamesTable).values(toInsert.slice(batch, end));
+    }
+  } catch (error) {
+    console.log(error);
+  }
+  console.log("Locations Alt names inserted");
+}
 
 // async function doInsertLocationGeometry(
 //   db: Db,
@@ -280,7 +292,7 @@ export async function insertLocations(
     options: (typeof LOCATIONS_INSERTION_OPTIONS)[number][];
   }
 ) {
-  const all = await getLocationsRawData(options.locationsTransformPath);
+  const all = await getLocationsData(options.locationsTransformPath);
   if (options.options.includes("Locations Campuses")) {
     await doInsertCampuses(db, all);
   }
@@ -289,5 +301,8 @@ export async function insertLocations(
   }
   if (options.options.includes("Locations")) {
     await doInsertLocations(db, all);
+  }
+  if (options.options.includes("Locations Alt Names")) {
+    await doInsertLocationAltNames(db, all);
   }
 }

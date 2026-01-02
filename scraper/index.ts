@@ -508,7 +508,7 @@ program
       return;
     }
     await inquireInsertLocations(db, {
-      locationsTransformPath: locationsRawDataPath,
+      locationsTransformPath: locationsTransformPath,
     });
 
     console.log("Completed! You may CTRL+C to exit.");
