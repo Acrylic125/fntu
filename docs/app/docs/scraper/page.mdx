@@ -79,10 +79,17 @@ Data sources are the pages we want to scrape from.
             Locations
             </TableCell>
             <TableCell colSpan={4}>
-            Sourcing main locations.
-            - [Mapsindoors Categories](https://api.mapsindoors.com/ntuprod/api/categories)
-            - [Mapsindoors Academic Facilities](https://api.mapsindoors.com/ntuprod/api/locations?venue=NTU&categories=AcademicFacilities&take=1000&skip=0&orderBy=relevance&extendedLocations=true&lr=en-US)
-            - [Mapsindoors Labs/Workshops](https://api.mapsindoors.com/ntuprod/api/locations?venue=NTU&categories=LabsStudioWorkshops&take=1000&skip=0&orderBy=relevance&extendedLocations=true&lr=en-US)
+            <div className='max-w-xl text-wrap'>
+            NTU map uses maze map. We can source all locations by first retrieving all campuses.
+            - [Campuses](https://api.mazemap.com/api/campuscollection/ntu-sg/?withcampuses=true)
+
+            Using the campus ids, we can retrieve all locations for each campus.
+            - [Locations @ One North](https://api.mazemap.com/api/campus/2271/pois/?fromid=0)
+            - [Locations @ Novena](https://api.mazemap.com/api/campus/2270/pois/?fromid=0)
+            - [Locations @ Main](https://api.mazemap.com/api/campus/2123/pois/?fromid=0)
+
+            Do note the query param, `fromid`. We use this to paginate through the locations.
+            </div>
 
             <div className='max-w-xl text-wrap'>
             We have to link the names used in undergraduate programsto the names used in MapIndoors. Thus, we add **Altername Names (altNames)** to each location. We source `altNames` from:
