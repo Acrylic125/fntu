@@ -120,6 +120,7 @@ export const locationsTable = pgTable("locations", {
     .references(() => campusTable.id, { onDelete: "cascade" }),
   latitude: real().notNull(),
   longitude: real().notNull(),
+  z: real(),
   mazeMapPoiId: integer().unique().notNull(),
   mazeMapIdentifier: varchar({ length: 64 }),
 });
