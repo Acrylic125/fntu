@@ -3,11 +3,10 @@ import { describeRoute, resolver, validator } from "hono-openapi";
 import { z } from "@hono/zod-openapi";
 import {
   locationAltNamesTable,
-  locationGeometryTable,
   locationsTable,
-  programsTable,
+  locationTypesTable,
 } from "../db/schema";
-import { and, eq, gte, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, eq, gte, ilike, inArray } from "drizzle-orm";
 import { API_PARAMS } from "../open-api";
 import { getDb } from "../db";
 
@@ -26,10 +25,10 @@ locationsRoute.get(
   async (c) => {
     const categories = await getDb()
       .select({
-        category: locationsTable.category,
+        category: locationTypesTable.name,
       })
-      .from(locationsTable)
-      .groupBy(locationsTable.category);
+      .from(locationTypesTable);
+    // .groupBy(locationsTable.n);
     return c.json(categories.map((category) => category.category));
   }
 );
@@ -61,69 +60,72 @@ locationsRoute.get(
     "query",
     z.object({
       search: z.string().optional(),
-      category: z
-        .enum([
-          "CollegesSchoolsInstitutes",
-          "Art",
-          "BOH",
-          "AcademicFacilities",
-          "Events and Activities",
-          "ResearchCentres",
-          "Accomodations",
-          "BusStop",
-          "Handicapped Facilities",
-          "Unknown",
-          "LabsStudioWorkshops",
-          "Clinics and Childcare",
-          "MeetingRooms",
-          "Libraries",
-          "BuildingsLandmarks",
-          "Emergency",
-          "StudentsSportsRecreation",
-          "OfficesDepartments",
-          "Food and Beverages",
-          "Carparks",
-          "General",
-          "Commercials",
-        ])
-        .optional(),
+      // category: z
+      //   .enum([
+      //     "CollegesSchoolsInstitutes",
+      //     "Art",
+      //     "BOH",
+      //     "AcademicFacilities",
+      //     "Events and Activities",
+      //     "ResearchCentres",
+      //     "Accomodations",
+      //     "BusStop",
+      //     "Handicapped Facilities",
+      //     "Unknown",
+      //     "LabsStudioWorkshops",
+      //     "Clinics and Childcare",
+      //     "MeetingRooms",
+      //     "Libraries",
+      //     "BuildingsLandmarks",
+      //     "Emergency",
+      //     "StudentsSportsRecreation",
+      //     "OfficesDepartments",
+      //     "Food and Beverages",
+      //     "Carparks",
+      //     "General",
+      //     "Commercials",
+      //   ])
+      // .optional(),
       building: z
         .enum([
-          "S4",
-          "S3.2",
-          "N4",
-          "NMS",
-          "SRC",
-          "N4.1",
-          "S3",
-          "ADM",
-          "N1.3",
-          "SMS",
-          "S2",
-          "N2.1",
-          "S3.1",
-          "N3",
-          "TheArc",
-          "S1",
-          "N2",
-          "TheWave",
-          "THE_HIVE",
-          "SSC",
-          "N3.1",
-          "SPMS",
-          "N1.2",
-          "N1.1",
-          "HSS",
-          "RTP",
-          "SBS",
-          "ABS",
-          "S2.1",
-          "S2.2",
-          "AdminBuilding",
-          "N1",
-          "WKWSCI",
+          "Block S4",
+          "Block S2.1",
+          "Sports & Recreation Centre (SRC)",
+          " Block N3.2",
+          "Wee Cho Yaw Plaza (WCYP)",
+          "North Spine Building",
+          "School of Biological Sciences",
+          "Block N4.1",
+          "Block N2.1",
+          "The Wave",
+          "Block N3",
+          "SAF-NTU Academy",
+          "Block S1 - School of Electrical and Electronic Engineering",
+          "Block S2",
+          "South Spine Building",
+          "School of Art, Design and Media",
+          "Block N4",
+          "School of Chemical and Biomedical Engineering (SCBE - BIE)",
+          "Experimental Medicine Building (EMB)",
+          "Block N1.2 - School of Chemical and Biomedical Engineering (SCBE - CBE)",
+          "Administration Building (Admin Bg)",
+          "Block S2.2",
+          "Block N2 (Asian School of the Environment)",
+          "Nanyang Business School (S3)",
+          "Academic Building North",
+          " Block N3.1",
+          "School of Humanities and Social Sciences",
+          "The Arc - Learning Hub North",
+          "Research Techno Plaza",
+          "School of Physical and Mathematical Sciences (SPMS)",
+          "Block N1.1",
+          "The Hive",
+          "Student Services Centre (SSC)",
+          "Nanyang Auditorium",
+          " Block S3.1",
+          "Block N1",
           "N3.1A",
-          "N3.2",
+          "Wee Kim Wee School of Communication and Information (WKWSCI)",
         ])
         .optional(),
       cursor: z.coerce.number().optional(),
@@ -143,15 +145,13 @@ locationsRoute.get(
                   z.object({
                     id: z.number(),
                     name: z.string(),
-                    category: z.string(),
-                    building: z.string().nullable(),
-                    floor: z.string(),
+                    building: z.string(),
+                    latitude: z.number(),
+                    longitude: z.number(),
+                    z: z.number(),
                     floorName: z.string(),
-                    venue: z.string(),
-                    type: z.string(),
-                    imageUrl: z.string().nullable(),
-                    mapIndoorsId: z.string(),
-                    mapIndoorsRoomId: z.string().nullable(),
+                    mazeMapPoiId: z.number(),
+                    mazeMapIdentifier: z.string().nullable(),
                   })
                 ),
                 pagination: z.object({
@@ -173,25 +173,27 @@ locationsRoute.get(
     if (query.cursor) {
       whereConditions.push(gte(locationsTable.id, query.cursor));
     }
-    if (query.category) {
-      whereConditions.push(eq(locationsTable.category, query.category));
-    }
-    if (query.building) {
-      whereConditions.push(eq(locationsTable.building, query.building));
-    }
+    // if (query.category) {
+    //   whereConditions.push(eq(locationsTable.category, query.category));
+    // }
+    // if (query.building) {
+    //   whereConditions.push(eq(locationsTable.building, query.building));
+    // }
     const locations = await getDb()
       .select({
         id: locationsTable.id,
         name: locationsTable.name,
-        category: locationsTable.category,
         building: locationsTable.building,
-        floor: locationsTable.floor,
+        latitude: locationsTable.latitude,
+        longitude: locationsTable.longitude,
+        z: locationsTable.z,
         floorName: locationsTable.floorName,
-        venue: locationsTable.venue,
-        type: locationsTable.type,
-        imageUrl: locationsTable.imageUrl,
-        mapIndoorsId: locationsTable.mapIndoorsId,
-        mapIndoorsRoomId: locationsTable.mapIndoorsRoomId,
+        mazeMapPoiId: locationsTable.mazeMapPoiId,
+        mazeMapIdentifier: locationsTable.mazeMapIdentifier,
+        // venue: locationsTable.venue,
+        // type: locationsTable.type,
+        // mapIndoorsId: locationsTable.mapIndoorsId,
+        // mapIndoorsRoomId: locationsTable.mapIndoorsRoomId,
       })
       .from(locationsTable)
       .where(and(...whereConditions))
@@ -300,28 +302,28 @@ locationsRoute.get(
   }
 );
 
-locationsRoute.get(
-  "/:id/geometry",
-  validator("param", z.object({ id: z.coerce.number() })),
-  describeRoute({
-    parameters: API_PARAMS,
-    responses: {
-      200: {
-        description: "Successful response",
-      },
-    },
-  }),
-  async (c) => {
-    const params = c.req.valid("param");
-    const geometry = await getDb()
-      .select({
-        longitude: locationGeometryTable.longitude,
-        latitude: locationGeometryTable.latitude,
-        order: locationGeometryTable.order,
-      })
-      .from(locationGeometryTable)
-      .where(eq(locationGeometryTable.locationId, params.id))
-      .orderBy(locationGeometryTable.order);
-    return c.json(geometry);
-  }
-);
+// locationsRoute.get(
+//   "/:id/geometry",
+//   validator("param", z.object({ id: z.coerce.number() })),
+//   describeRoute({
+//     parameters: API_PARAMS,
+//     responses: {
+//       200: {
+//         description: "Successful response",
+//       },
+//     },
+//   }),
+//   async (c) => {
+//     const params = c.req.valid("param");
+//     const geometry = await getDb()
+//       .select({
+//         longitude: locationGeometryTable.longitude,
+//         latitude: locationGeometryTable.latitude,
+//         order: locationGeometryTable.order,
+//       })
+//       .from(locationGeometryTable)
+//       .where(eq(locationGeometryTable.locationId, params.id))
+//       .orderBy(locationGeometryTable.order);
+//     return c.json(geometry);
+//   }
+// );
