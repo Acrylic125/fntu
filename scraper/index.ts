@@ -619,7 +619,7 @@ program
 
     // Copy from, Copy to
     const copyFilePaths: [string, string][] = [
-      ["locations/transform.json", "locations/locations.json"],
+      ["locations/locations.json", "locations/locations.json"],
     ];
     const bundle: z.infer<typeof BundleSchema> = {
       version: "1",
