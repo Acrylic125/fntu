@@ -117,6 +117,7 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
               mazeMapIdentifier: l.identifier,
               longitude: lon,
               latitude: lat,
+              z: l.z,
             };
           })
         )
