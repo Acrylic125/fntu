@@ -130,7 +130,6 @@ export const campusTable = pgTable(
   {
     id: serial().notNull().primaryKey(),
     name: varchar({ length: 32 }).notNull(),
-    mazeMapId: varchar({ length: 64 }).notNull(),
     mazeMapCampusId: integer().notNull(),
   },
   (t) => [unique("idx_campuses_name").on(t.name)]

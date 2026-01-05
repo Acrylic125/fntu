@@ -33,17 +33,16 @@ async function getLocationsData(filePath: string) {
 
 async function doInsertCampuses(db: Db, all: LocationsRawData) {
   try {
-    const campuses = new Set<string>();
+    const campuses = new Map<number, string>();
     for (const l of all) {
-      campuses.add(l.campus.name);
+      campuses.set(l.campus.campusId, l.campus.name);
     }
     await db
       .insert(campusTable)
       .values(
-        Array.from(campuses).map((c) => ({
-          name: c,
-          mazeMapId: c,
-          mazeMapCampusId: 0,
+        Array.from(campuses.entries()).map(([id, name]) => ({
+          name,
+          mazeMapCampusId: id,
         }))
       )
       .onConflictDoNothing();
