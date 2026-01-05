@@ -109,34 +109,20 @@ export const courseIndexClassesTable = pgTable("course_index_classes", {
   weeks: integer().array().notNull(),
 });
 
-// export const venuesTable = pgTable("venues", {
-//   id: serial().notNull().primaryKey(),
-//   venue: varchar({ length: 128 }).notNull(),
-//   area: varchar({ length: 128 }).notNull(),
-//   capacity: integer().notNull(),
-//   location: varchar({ length: 128 }).notNull(),
-//   bookableByStaff: boolean().notNull().default(false),
-//   bookableByStudentOrganizations: boolean().notNull().default(false),
-//   remarks: varchar({ length: 128 }),
-// });
-
-export const locationsTable = pgTable(
-  "locations",
-  {
-    id: serial().notNull().primaryKey(),
-    name: varchar({ length: 255 }),
-    description: varchar({ length: 1024 }),
-    building: varchar({ length: 255 }),
-    floorName: varchar({ length: 64 }),
-    campusId: integer()
-      .notNull()
-      .references(() => campusTable.id, { onDelete: "cascade" }),
-    mazeMapPoiId: integer().unique().notNull(),
-    mazeMapIdentifier: varchar({ length: 64 }),
-    mazeMapInfoUrl: varchar({ length: 512 }),
-  }
-  // (t) => [unique("idx_locations_mazeMapPoiId").on(t.mazeMapPoiId)]
-);
+export const locationsTable = pgTable("locations", {
+  id: serial().notNull().primaryKey(),
+  name: varchar({ length: 255 }),
+  description: varchar({ length: 1024 }),
+  building: varchar({ length: 255 }),
+  floorName: varchar({ length: 64 }),
+  campusId: integer()
+    .notNull()
+    .references(() => campusTable.id, { onDelete: "cascade" }),
+  latitude: real().notNull(),
+  longitude: real().notNull(),
+  mazeMapPoiId: integer().unique().notNull(),
+  mazeMapIdentifier: varchar({ length: 64 }),
+});
 
 export const campusTable = pgTable(
   "campuses",

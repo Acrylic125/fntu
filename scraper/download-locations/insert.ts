@@ -53,6 +53,15 @@ async function doInsertCampuses(db: Db, all: LocationsRawData) {
   }
 }
 
+function mercatorToLatLon(x: number, y: number): { lat: number; lon: number } {
+  const R = 6378137; // Earth radius in meters
+
+  const lon = (x / R) * (180 / Math.PI);
+  const lat = (2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) * (180 / Math.PI);
+
+  return { lat, lon };
+}
+
 async function doInsertLocationsTypes(db: Db, all: LocationsRawData) {
   try {
     const locationTypes = new Set(
@@ -92,6 +101,12 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
                 `Campus ${l.campus.name} not found. Please insert the campus first.`
               );
             }
+
+            // Mazemap coordinates uses Web Mercator. Convert it accordingly.
+            const { lat, lon } = mercatorToLatLon(
+              l.point.coordinates[0],
+              l.point.coordinates[1]
+            );
             return {
               name: l.title,
               description: l.description,
@@ -100,7 +115,8 @@ async function doInsertLocations(db: Db, all: LocationsRawData) {
               campusId,
               mazeMapPoiId: l.poiId,
               mazeMapIdentifier: l.identifier,
-              mazeMapInfoUrl: l.infoUrl,
+              longitude: lon,
+              latitude: lat,
             };
           })
         )
