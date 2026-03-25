@@ -875,7 +875,7 @@ program
   .option(
     "--batch-size <number>",
     "Number of documents to insert per mutation",
-    "200"
+    "10000"
   )
   .action(async ({ downloadDir, url, batchSize }) => {
     try {
