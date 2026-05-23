@@ -10,6 +10,7 @@ import {
   pgEnum,
   boolean,
   real,
+  date,
 } from "drizzle-orm/pg-core";
 
 export const tsvector = customType<{
@@ -192,6 +193,17 @@ export const locationAltNamesTable = pgTable(
   },
   (t) => [index("idx_location_alt_names_altName").on(t.altName)]
 );
+
+export const examsTable = pgTable("exams", {
+  id: serial().notNull().primaryKey(),
+  courseId: integer()
+    .notNull()
+    .references(() => coursesTable.id, { onDelete: "cascade" }),
+  date: date().notNull(),
+  timeHour: integer().notNull(),
+  timeMinute: integer().notNull(),
+  duration: real().notNull(),
+});
 
 // export const locationGeometryTable = pgTable(
 //   "location_geometry",

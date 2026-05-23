@@ -24,6 +24,12 @@ import {
 import { transformSchedules } from "./download-courses/transform-schedules";
 import z from "zod";
 import { transformLocations } from "./download-locations/transofrm-locations";
+import { downloadExamPlans } from "./download-exams/download-plans";
+import { scrapeExamPlans } from "./download-exams/scrape-plans";
+import { downloadExamTimetable } from "./download-exams/download-exams";
+import { scrapeExams } from "./download-exams/scrape-exams";
+import { EXAMS_INSERTION_OPTIONS, insertExams } from "./download-exams/insert";
+import type { ExamPlan } from "./download-exams/schema";
 dotenv.config();
 
 const BundleSchema = z.object({
@@ -88,6 +94,28 @@ async function inquireInsertLocations(
   });
 }
 
+async function inquireInsertExams(
+  db: Db,
+  options: {
+    examsPath: string;
+    aySem: { ay: string; sem: string };
+  }
+) {
+  const examInsertOptions = await inquirer.prompt([
+    {
+      type: "checkbox",
+      name: "options",
+      message: "What do you want to insert?",
+      choices: EXAMS_INSERTION_OPTIONS,
+    },
+  ]);
+
+  await insertExams(db, options.aySem.ay, options.aySem.sem, {
+    examsPath: options.examsPath,
+    options: examInsertOptions.options,
+  });
+}
+
 async function inquireDb() {
   let dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
@@ -129,6 +157,11 @@ async function inquireDb() {
 }
 
 const SUPPORTED_AY = [
+  {
+    year: "2025",
+    ay: "25/26",
+    sem: "S",
+  },
   {
     year: "2025",
     ay: "25/26",
@@ -509,6 +542,151 @@ program
     }
     await inquireInsertLocations(db, {
       locationsTransformPath: locationsTransformPath,
+    });
+
+    console.log("Completed! You may CTRL+C to exit.");
+  });
+
+program
+  .command("exams")
+  .description("Download, scrape, and insert exam timetable from NTU")
+  .option("-s, --skip-optional", "Skip optional prompts")
+  .action(async ({ skipOptional }) => {
+    const outDir = path.resolve("out");
+
+    console.log(chalk.blue("FNTU"));
+    console.log(`Artifacts will be saved in ${outDir}`);
+    console.log("");
+    console.log(`TIP: You can use the -s flag to skip optional prompts.`);
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
+    }
+
+    const { aySem } = await inquirerAcadSemester();
+
+    const sourcesBaseDir = path.resolve(outDir, "data-sources");
+    const sourcesAcadYearDir = path.resolve(
+      sourcesBaseDir,
+      `${aySem.year}-${aySem.sem}`
+    );
+    const examsDir = path.resolve(sourcesAcadYearDir, "exams");
+    if (!fs.existsSync(examsDir)) {
+      fs.mkdirSync(examsDir, { recursive: true });
+    }
+
+    // Download list of exam plans from NTU.
+    const plansHtmlPath = path.resolve(examsDir, "plans.html");
+    const plansJsonPath = path.resolve(examsDir, "plans.json");
+    const plansHtmlExists = fs.existsSync(plansHtmlPath);
+    let confirmDownloadPlans = !plansHtmlExists;
+    if (!skipOptional && plansHtmlExists) {
+      const response = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message:
+            "Do you want to download the list of exam plans again? You already have this file.",
+          default: true,
+        },
+      ]);
+      confirmDownloadPlans = response.confirm;
+    }
+    if (confirmDownloadPlans) {
+      console.log("Downloading list of exam plans from NTU");
+      await downloadExamPlans(plansHtmlPath);
+      console.log("Downloaded complete.");
+    }
+
+    const plans = await scrapeExamPlans(plansHtmlPath, plansJsonPath);
+    if (plans.length === 0) {
+      console.log(
+        chalk.red(
+          "No exam plans available from NTU at this time. Try again closer to the exam period."
+        )
+      );
+      return;
+    }
+
+    // Choose which exam plan to download.
+    const { selectedPlan } = await inquirer.prompt<{
+      selectedPlan: ExamPlan;
+    }>([
+      {
+        type: "select",
+        name: "selectedPlan",
+        message: `Which exam plan corresponds to AY ${aySem.ay} S${aySem.sem}?`,
+        choices: plans.map((p) => ({
+          name: p.name || `Plan ${p.planNo}`,
+          value: p,
+        })),
+      },
+    ]);
+
+    // Download the exam timetable HTML for the selected plan.
+    const planSlug = selectedPlan.planNo;
+    const examsHtmlPath = path.resolve(examsDir, `exams-plan-${planSlug}.html`);
+    const examsJsonPath = path.resolve(examsDir, `exams-plan-${planSlug}.json`);
+    const hiddenFieldsPath = path.resolve(
+      examsDir,
+      `exams-plan-${planSlug}.hidden.json`
+    );
+    const examsHtmlExists = fs.existsSync(examsHtmlPath);
+    let confirmDownloadExams = !examsHtmlExists;
+    if (!skipOptional && examsHtmlExists) {
+      const response = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message:
+            "Do you want to download the exam timetable again? You already have this file.",
+          default: true,
+        },
+      ]);
+      confirmDownloadExams = response.confirm;
+    }
+    if (confirmDownloadExams) {
+      console.log("Downloading exam timetable from NTU");
+      await downloadExamTimetable({
+        planNo: selectedPlan.planNo,
+        type: selectedPlan.type,
+        filepath: examsHtmlPath,
+        hiddenFieldsFilepath: hiddenFieldsPath,
+      });
+      console.log("Downloaded complete.");
+    }
+
+    // Scrape the exam timetable HTML.
+    const examsJsonExists = fs.existsSync(examsJsonPath);
+    let confirmScrapeExams = !examsJsonExists;
+    if (!skipOptional && examsJsonExists) {
+      const response = await inquirer.prompt([
+        {
+          type: "confirm",
+          name: "confirm",
+          message:
+            "Do you want to scrape the exam timetable again? You already have this file.",
+          default: true,
+        },
+      ]);
+      confirmScrapeExams = response.confirm;
+    }
+    if (confirmScrapeExams) {
+      console.log("Scraping exam timetable from NTU");
+      await scrapeExams(examsHtmlPath, examsJsonPath);
+      console.log("Scraped complete.");
+    }
+
+    // Insert data into database.
+    console.log("Inserting data into database");
+    console.log("");
+
+    const db = await inquireDb();
+    if (!db) {
+      return;
+    }
+    await inquireInsertExams(db, {
+      examsPath: examsJsonPath,
+      aySem,
     });
 
     console.log("Completed! You may CTRL+C to exit.");
