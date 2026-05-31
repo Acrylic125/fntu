@@ -257,6 +257,27 @@ type UploadPlan = {
   locationAltNames: PendingLocationAltName[];
 };
 
+/** Convex rejects mutation argument arrays longer than this. */
+const MAX_CONVEX_ARRAY_LENGTH = 8192;
+
+/** Keep indexed dedup lookups under Convex's per-mutation read limit (4096). */
+const DEDUP_INSERT_BATCH_SIZE = 512;
+
+/** Rows that run wider indexed scans per document (e.g. .collect()). */
+const HEAVY_DEDUP_BATCH_SIZE = 64;
+
+function resolveBatchSize(batchSize: number): number {
+  return Math.min(batchSize, MAX_CONVEX_ARRAY_LENGTH);
+}
+
+function resolveDedupBatchSize(batchSize: number): number {
+  return Math.min(resolveBatchSize(batchSize), DEDUP_INSERT_BATCH_SIZE);
+}
+
+function resolveHeavyDedupBatchSize(batchSize: number): number {
+  return Math.min(resolveDedupBatchSize(batchSize), HEAVY_DEDUP_BATCH_SIZE);
+}
+
 const seedFunctions = {
   insertPrograms: "seed:insertPrograms",
   insertCourses: "seed:insertCourses",
@@ -720,18 +741,20 @@ async function insertDownloadBundle(
 ) {
   const client = new ConvexHttpClient(convexUrl);
   const plan = buildUploadPlan(downloadDir);
+  const effectiveBatchSize = resolveDedupBatchSize(batchSize);
+  const heavyBatchSize = resolveHeavyDedupBatchSize(batchSize);
 
   console.log(chalk.blue("Uploading data to Convex"));
   console.log(`Source bundle: ${downloadDir}`);
   console.log(`Convex URL: ${convexUrl}`);
   console.log("");
 
-  const programIds = await insertKeyedRows<ProgramDoc, "programs">(
+  await insertKeyedRows<ProgramDoc, "programs">(
     client,
     seedFunctions.insertPrograms,
     "Programs",
     plan.programs,
-    batchSize
+    effectiveBatchSize
   );
 
   const courseIds = await insertKeyedRows<CourseDoc, "courses">(
@@ -739,7 +762,7 @@ async function insertDownloadBundle(
     seedFunctions.insertCourses,
     "Courses",
     plan.courses,
-    batchSize
+    effectiveBatchSize
   );
 
   const campusIds = await insertKeyedRows<CampusDoc, "campuses">(
@@ -747,7 +770,7 @@ async function insertDownloadBundle(
     seedFunctions.insertCampuses,
     "Campuses",
     plan.campuses,
-    batchSize
+    effectiveBatchSize
   );
 
   const locationTypeIds = await insertKeyedRows<
@@ -758,7 +781,7 @@ async function insertDownloadBundle(
     seedFunctions.insertLocationTypes,
     "Location types",
     plan.locationTypes,
-    batchSize
+    effectiveBatchSize
   );
 
   const courseIndexRows = plan.courseIndexes.map((row) => ({
@@ -776,7 +799,7 @@ async function insertDownloadBundle(
     seedFunctions.insertCourseIndexes,
     "Course indexes",
     courseIndexRows,
-    batchSize
+    effectiveBatchSize
   );
 
   const locationRows = plan.locations.map((row) => ({
@@ -794,19 +817,10 @@ async function insertDownloadBundle(
     seedFunctions.insertLocations,
     "Locations",
     locationRows,
-    batchSize
+    effectiveBatchSize
   );
 
-  await insertUnkeyedRows(
-    client,
-    seedFunctions.insertCourseIndexSources,
-    "Course index sources",
-    plan.courseIndexSources.map((row) => ({
-      indexId: requireId(courseIndexIds, row.indexKey, "Course index"),
-      source: requireId(programIds, row.programKey, "Program"),
-    })),
-    batchSize
-  );
+  console.log("Course index sources: skipped");
 
   await insertUnkeyedRows(
     client,
@@ -816,7 +830,7 @@ async function insertDownloadBundle(
       indexId: requireId(courseIndexIds, row.indexKey, "Course index"),
       ...row.doc,
     })),
-    batchSize
+    heavyBatchSize
   );
 
   await insertUnkeyedRows(
@@ -827,7 +841,7 @@ async function insertDownloadBundle(
       locationId: requireId(locationIds, row.locationKey, "Location"),
       typeId: requireId(locationTypeIds, row.typeKey, "Location type"),
     })),
-    batchSize
+    effectiveBatchSize
   );
 
   await insertUnkeyedRows(
@@ -838,7 +852,7 @@ async function insertDownloadBundle(
       locationId: requireId(locationIds, row.locationKey, "Location"),
       imageUrl: row.imageUrl,
     })),
-    batchSize
+    effectiveBatchSize
   );
 
   await insertUnkeyedRows(
@@ -849,7 +863,7 @@ async function insertDownloadBundle(
       locationId: requireId(locationIds, row.locationKey, "Location"),
       altName: row.altName,
     })),
-    batchSize
+    heavyBatchSize
   );
 
   console.log("");
@@ -875,11 +889,11 @@ program
   .option(
     "--batch-size <number>",
     "Number of documents to insert per mutation",
-    "10000"
+    "4096"
   )
   .action(async ({ downloadDir, url, batchSize }) => {
     try {
-      const parsedBatchSize = Number(batchSize);
+      const parsedBatchSize = resolveDedupBatchSize(Number(batchSize));
       if (!Number.isInteger(parsedBatchSize) || parsedBatchSize <= 0) {
         throw new Error("batch-size must be a positive integer");
       }
