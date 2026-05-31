@@ -108,69 +108,13 @@ Data sources are the pages we want to scrape from.
             </TableCell>
             <TableCell colSpan={4}>
             <div className='max-w-xl text-wrap'>
-            The NTU exam timetable is rendered behind a multi-step HTML form. There is no single URL to GET — each step is a `POST` that returns the next page's HTML.
-
             1. **List exam plans.** `POST` to [exam_timetable_und.MainSubmit](https://wis.ntu.edu.sg/webexe/owa/exam_timetable_und.MainSubmit) with `p_opt=1`, `p_type=UE`, `bOption=Next`. The response lists every available plan (e.g. `SEMESTER 1 AY2025-26`, `SPECIAL TERM AY2025-26`) as radio inputs named `p_plan_no`.
-            1. **Resolve hidden fields.** `POST` to [exam_timetable_und.query_page](https://wis.ntu.edu.sg/webexe/owa/exam_timetable_und.query_page) with the chosen `p_plan_no` and `p_type`. The response embeds hidden fields (`academic_session`, `p_exam_yr`, `p_semester`, ...) that the next step requires.
             1. **Fetch the timetable.** `POST` to [exam_timetable_und.Get_detail](https://wis.ntu.edu.sg/webexe/owa/exam_timetable_und.Get_detail) with the hidden fields, leaving the date/time/dept/subject/venue/matric filters blank to get **all** exams. The response is the full timetable HTML.
             </div>
             </TableCell>
         </TableRow>
     </TableBody>
 </Table>
-
-## Exams pipeline
-Unlike courses and locations, the exam timetable cannot be downloaded in a single request. The form needs to be walked step-by-step to keep its hidden state in sync. The CLI flow (`pnpm run start exams`) is broken into the following scripts under [`scraper/download-exams`](https://github.com/Acrylic125/fntu/tree/main/scraper/download-exams):
-
-<Table className="table-fixed prose-td:px-4 prose-th:px-4 prose-th:[&>p]:my-0">
-  <TableHeader>
-    <TableRow>
-      <TableHead colSpan={1}>Step</TableHead>
-      <TableHead colSpan={2}>Script</TableHead>
-      <TableHead colSpan={2}>What it does</TableHead>
-    </TableRow>
-  </TableHeader>
-  <TableBody>
-    <TableRow>
-      <TableCell colSpan={1}>Download</TableCell>
-      <TableCell colSpan={2}>`download-plans.ts`</TableCell>
-      <TableCell colSpan={2}>POSTs to `MainSubmit` with `p_opt=1` and saves the HTML page that lists every available exam plan.</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell colSpan={1}>Scrape</TableCell>
-      <TableCell colSpan={2}>`scrape-plans.ts`</TableCell>
-      <TableCell colSpan={2}>Parses the radio inputs (`p_plan_no`) from that HTML to produce `{ planNo, name, type }` for each AY/Semester/Special Term. The CLI prompts you to pick the one matching your selected AY/Sem.</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell colSpan={1}>Download</TableCell>
-      <TableCell colSpan={2}>`download-exams.ts`</TableCell>
-      <TableCell colSpan={2}>POSTs the chosen plan to `query_page`, reads the hidden fields (`academic_session`, `p_exam_yr`, `p_semester`, ...) from the response, then POSTs them to `Get_detail` with all filters blank to download the full timetable HTML.</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell colSpan={1}>Scrape</TableCell>
-      <TableCell colSpan={2}>`scrape-exams.ts`</TableCell>
-      <TableCell colSpan={2}>Walks the timetable tables with cheerio. Rows whose first cell matches `DD Month YYYY` are parsed into `{ date, day, timeHour, timeMinute, courseCode, courseTitle, duration }`. NTU's `9.00 am` / `2 hr 30 min` formats are normalised to ISO date + 24h time + decimal hours. The shape is validated by [`schema.ts`](https://github.com/Acrylic125/fntu/blob/main/scraper/download-exams/schema.ts).</TableCell>
-    </TableRow>
-    <TableRow>
-      <TableCell colSpan={1}>Insert</TableCell>
-      <TableCell colSpan={2}>`insert.ts`</TableCell>
-      <TableCell colSpan={2}>Looks up `coursesTable` rows for the selected `(ay, semester)` to map `courseCode` → `courseId`, then batch-inserts into `examsTable` (1000 rows per batch). Exam rows whose course is missing for that AY/Sem are skipped with a warning, so you should run `pnpm run start courses` for the same AY/Sem first.</TableCell>
-    </TableRow>
-  </TableBody>
-</Table>
-
-All artifacts are written under `out/data-sources/<year>-<sem>/exams/`:
-- `plans.html` / `plans.json` — list of available exam plans.
-- `exams-plan-<planNo>.html` — raw timetable HTML for the chosen plan.
-- `exams-plan-<planNo>.hidden.json` — the hidden form fields used for the `Get_detail` POST (handy for debugging).
-- `exams-plan-<planNo>.json` — the final scraped exam rows that get inserted.
-
-<Alert variant="warning" className="flex flex-col gap-2 not-prose">
-  <AlertTitle className="text-sm md:text-base lg:text-lg">Run after courses</AlertTitle>
-  <AlertDescription className="text-xs md:text-sm lg:text-base">
-    Exams are linked to courses by `(ay, semester, courseCode)`. If the matching course row does not exist, the exam is skipped during insertion. Always run `pnpm run start courses` for the same AY/Sem before `pnpm run start exams`.
-  </AlertDescription>
-</Alert>
 
 ## Tips for Scraping
 1. Try to find relevant pages to scrape from.
