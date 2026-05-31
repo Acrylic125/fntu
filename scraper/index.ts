@@ -172,6 +172,11 @@ const SUPPORTED_AY = [
     ay: "25/26",
     sem: "1",
   },
+  {
+    year: "2026",
+    ay: "26/27",
+    sem: "1",
+  },
 ];
 
 async function inquirerAcadSemester() {

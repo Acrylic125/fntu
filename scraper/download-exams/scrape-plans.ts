@@ -2,6 +2,30 @@ import * as cheerio from "cheerio";
 import fs from "fs";
 import { ExamPlan } from "./schema";
 
+type HtmlNode = {
+  type: string;
+  name?: string;
+  attribs?: Record<string, string | undefined>;
+  data?: string;
+  next: HtmlNode | null;
+};
+
+function labelAfterRadioInput(el: HtmlNode): string {
+  let label = "";
+  let node: HtmlNode | null = el.next;
+  while (node) {
+    if (node.type === "tag") {
+      if (node.name === "br") break;
+      if (node.name === "input" && node.attribs?.name === "p_plan_no") break;
+    }
+    if (node.type === "text") {
+      label += node.data ?? "";
+    }
+    node = node.next;
+  }
+  return label.replace(/\s+/g, " ").trim();
+}
+
 export function scrapeExamPlansFromHtml(html: string): ExamPlan[] {
   const $ = cheerio.load(html);
   const plans: ExamPlan[] = [];
@@ -14,19 +38,11 @@ export function scrapeExamPlansFromHtml(html: string): ExamPlan[] {
     const planNo = $(el).attr("value");
     if (!planNo) return;
 
-    // The label is the bare text node sibling next to the radio input in
-    // each <td>. Walking the parent's contents lets us pick up just the
-    // text-node label without also pulling in any nested elements.
-    const parent = $(el).parent();
-    let label = "";
-    parent.contents().each((_i, node) => {
-      if (node.type === "text") {
-        label += (node as { data?: string }).data ?? "";
-      }
-    });
-    label = label.replace(/\s+/g, " ").trim();
+    // Each plan is `<input name="p_plan_no" …>LABEL<br>`. Labels are text
+    // nodes immediately after the radio, not inside the input's parent alone.
+    const name = labelAfterRadioInput(el as HtmlNode);
 
-    plans.push({ planNo, name: label, type });
+    plans.push({ planNo, name, type });
   });
   return plans;
 }
