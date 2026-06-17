@@ -31,6 +31,11 @@ export default defineSchema({
       filterFields: ["code", "ay", "semester"],
     }),
 
+  campuses: defineTable({
+    name: v.string(),
+    mazeMapCampusId: v.number(),
+  }).index("by_name", ["name"]),
+
   course_index: defineTable({
     index: v.string(),
     courseId: v.id("courses"),
@@ -38,120 +43,154 @@ export default defineSchema({
     .index("by_index_courseId", ["index", "courseId"])
     .index("by_courseId", ["courseId"]),
 
+  // programs: defineTable({
+  //   name: v.string(),
+  //   code: v.string(),
+  //   subCode: v.optional(v.string()),
+  //   year: v.optional(v.number()),
+  //   type: programType,
+  // }).index("by_code_subCode_year", ["code", "subCode", "year"]),
+
+  // courses: defineTable({
+  //   code: v.string(),
+  //   name: v.string(),
+  //   au: v.number(),
+  //   ay: v.string(),
+  //   semester: v.string(),
+  //   // Store a plain string instead of a Postgres tsvector.
+  //   searchText: v.string(),
+  //   isAvailableUE: v.boolean(),
+  //   isAvailableBD: v.boolean(),
+  //   isAvailableGEPE: v.boolean(),
+  //   isSelfPaced: v.boolean(),
+  // })
+  //   .index("by_code_ay_semester", ["code", "ay", "semester"])
+  //   .searchIndex("search_text", {
+  //     searchField: "searchText",
+  //     filterFields: ["code", "ay", "semester"],
+  //   }),
+
+  // course_index: defineTable({
+  //   index: v.string(),
+  //   courseId: v.id("courses"),
+  // })
+  //   .index("by_index_courseId", ["index", "courseId"])
+  //   .index("by_courseId", ["courseId"]),
+
   // course_index_sources: defineTable({
   //   indexId: v.id("course_index"),
   //   source: v.id("programs"),
   // }).index("by_indexId_source", ["indexId", "source"]),
 
-  course_index_classes: defineTable({
-    indexId: v.id("course_index"),
-    timeFromHour: v.number(),
-    timeFromMinute: v.number(),
-    timeToHour: v.number(),
-    timeToMinute: v.number(),
-    venue: v.string(),
-    day: v.number(),
-    type: v.string(),
-    remarks: v.string(),
-    weeks: v.array(v.number()),
-  }).index("by_indexId", ["indexId"]),
+  // course_index_classes: defineTable({
+  //   indexId: v.id("course_index"),
+  //   timeFromHour: v.number(),
+  //   timeFromMinute: v.number(),
+  //   timeToHour: v.number(),
+  //   timeToMinute: v.number(),
+  //   venue: v.string(),
+  //   day: v.number(),
+  //   type: v.string(),
+  //   remarks: v.string(),
+  //   weeks: v.array(v.number()),
+  // }).index("by_indexId", ["indexId"]),
 
-  campuses: defineTable({
-    name: v.string(),
-    mazeMapCampusId: v.number(),
-  }).index("by_name", ["name"]),
+  // campuses: defineTable({
+  //   name: v.string(),
+  //   mazeMapCampusId: v.number(),
+  // }).index("by_name", ["name"]),
 
-  locations: defineTable({
-    name: v.optional(v.string()),
-    description: v.optional(v.string()),
-    building: v.optional(v.string()),
-    floorName: v.optional(v.string()),
-    campusId: v.id("campuses"),
-    latitude: v.number(),
-    longitude: v.number(),
-    z: v.optional(v.number()),
-    mazeMapPoiId: v.number(),
-    mazeMapIdentifier: v.optional(v.string()),
-  })
-    .index("by_campusId", ["campusId"])
-    .index("by_mazeMapPoiId", ["mazeMapPoiId"]),
+  // locations: defineTable({
+  //   name: v.optional(v.string()),
+  //   description: v.optional(v.string()),
+  //   building: v.optional(v.string()),
+  //   floorName: v.optional(v.string()),
+  //   campusId: v.id("campuses"),
+  //   latitude: v.number(),
+  //   longitude: v.number(),
+  //   z: v.optional(v.number()),
+  //   mazeMapPoiId: v.number(),
+  //   mazeMapIdentifier: v.optional(v.string()),
+  // })
+  //   .index("by_campusId", ["campusId"])
+  //   .index("by_mazeMapPoiId", ["mazeMapPoiId"]),
 
-  location_types: defineTable({
-    name: v.string(),
-  }).index("by_name", ["name"]),
+  // location_types: defineTable({
+  //   name: v.string(),
+  // }).index("by_name", ["name"]),
 
-  location_type_locations: defineTable({
-    locationId: v.id("locations"),
-    typeId: v.id("location_types"),
-  }).index("by_locationId_typeId", ["locationId", "typeId"]),
+  // location_type_locations: defineTable({
+  //   locationId: v.id("locations"),
+  //   typeId: v.id("location_types"),
+  // }).index("by_locationId_typeId", ["locationId", "typeId"]),
 
-  location_images: defineTable({
-    locationId: v.id("locations"),
-    imageUrl: v.string(),
-  }).index("by_locationId_imageUrl", ["locationId", "imageUrl"]),
+  // location_images: defineTable({
+  //   locationId: v.id("locations"),
+  //   imageUrl: v.string(),
+  // }).index("by_locationId_imageUrl", ["locationId", "imageUrl"]),
 
-  location_alt_names: defineTable({
-    locationId: v.id("locations"),
-    altName: v.string(),
-  })
-    .index("by_locationId", ["locationId"])
-    .index("by_altName", ["altName"]),
+  // location_alt_names: defineTable({
+  //   locationId: v.id("locations"),
+  //   altName: v.string(),
+  // })
+  //   .index("by_locationId", ["locationId"])
+  //   .index("by_altName", ["altName"]),
 
-  // FIndex swap / matching tables
-  users: defineTable({
-    handle: v.string(),
-    username: v.string(),
-    telegramUserId: v.int64(),
-    email: v.string(),
-    school: v.string(),
-  })
-    .index("by_handle", ["handle"])
-    .index("by_email", ["email"]),
+  // // FIndex swap / matching tables
+  // users: defineTable({
+  //   handle: v.string(),
+  //   username: v.string(),
+  //   telegramUserId: v.int64(),
+  //   email: v.string(),
+  //   school: v.string(),
+  // })
+  //   .index("by_handle", ["handle"])
+  //   .index("by_email", ["email"]),
 
-  // Telegram user verification
-  telegram_user_verification: defineTable({
-    email: v.string(),
-    code: v.string(),
-  }).index("by_email", ["email"]),
+  // // Telegram user verification
+  // telegram_user_verification: defineTable({
+  //   email: v.string(),
+  //   code: v.string(),
+  // }).index("by_email", ["email"]),
 
-  // FIndex swap / matching tables
-  swapper: defineTable({
-    userId: v.id("users"),
-    courseId: v.id("courses"),
-    index: v.string(),
-    hasSwapped: v.boolean(),
-  })
-    .index("by_userId_courseId", ["userId", "courseId"])
-    .index("by_courseId_index", ["courseId", "index"])
-    .index("by_courseId", ["courseId"])
-    .index("by_userId", ["userId"]),
+  // // FIndex swap / matching tables
+  // swapper: defineTable({
+  //   userId: v.id("users"),
+  //   courseId: v.id("courses"),
+  //   index: v.string(),
+  //   hasSwapped: v.boolean(),
+  // })
+  //   .index("by_userId_courseId", ["userId", "courseId"])
+  //   .index("by_courseId_index", ["courseId", "index"])
+  //   .index("by_courseId", ["courseId"])
+  //   .index("by_userId", ["userId"]),
 
-  swapper_wants: defineTable({
-    swapperId: v.id("swapper"),
-    wantIndex: v.string(),
-    requestedAt: v.optional(v.number()), // ms since epoch
-  }).index("by_swapperId", ["swapperId"]),
+  // swapper_wants: defineTable({
+  //   swapperId: v.id("swapper"),
+  //   wantIndex: v.string(),
+  //   requestedAt: v.optional(v.number()), // ms since epoch
+  // }).index("by_swapperId", ["swapperId"]),
 
-  swap_requests: defineTable({
-    courseId: v.id("courses"),
-    initiator: v.id("swapper"),
-    targetSwapper: v.id("swapper"),
-    middlemanSwapper: v.optional(v.id("swapper")),
-    acceptedByInitiator: v.boolean(),
-    acceptedByTargetSwapper: v.boolean(),
-    acceptedByMiddlemanSwapper: v.boolean(),
-    isCompleted: v.boolean(),
-  })
-    .index("by_courseId_initiator_targetSwapper_middlemanSwapper", [
-      "courseId",
-      "initiator",
-      "targetSwapper",
-      "middlemanSwapper",
-    ])
-    .index("by_courseId", ["courseId"])
-    .index("by_initiator", ["initiator"]),
+  // swap_requests: defineTable({
+  //   courseId: v.id("courses"),
+  //   initiator: v.id("swapper"),
+  //   targetSwapper: v.id("swapper"),
+  //   middlemanSwapper: v.optional(v.id("swapper")),
+  //   acceptedByInitiator: v.boolean(),
+  //   acceptedByTargetSwapper: v.boolean(),
+  //   acceptedByMiddlemanSwapper: v.boolean(),
+  //   isCompleted: v.boolean(),
+  // })
+  //   .index("by_courseId_initiator_targetSwapper_middlemanSwapper", [
+  //     "courseId",
+  //     "initiator",
+  //     "targetSwapper",
+  //     "middlemanSwapper",
+  //   ])
+  //   .index("by_courseId", ["courseId"])
+  //   .index("by_initiator", ["initiator"]),
 
-  telegram_callback_data: defineTable({
-    callbackData: v.string(),
-  }),
+  // telegram_callback_data: defineTable({
+  //   callbackData: v.string(),
+  // }),
 });

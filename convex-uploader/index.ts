@@ -773,16 +773,16 @@ async function insertDownloadBundle(
     effectiveBatchSize
   );
 
-  const locationTypeIds = await insertKeyedRows<
-    LocationTypeDoc,
-    "location_types"
-  >(
-    client,
-    seedFunctions.insertLocationTypes,
-    "Location types",
-    plan.locationTypes,
-    effectiveBatchSize
-  );
+  // const locationTypeIds = await insertKeyedRows<
+  //   LocationTypeDoc,
+  //   "location_types"
+  // >(
+  //   client,
+  //   seedFunctions.insertLocationTypes,
+  //   "Location types",
+  //   plan.locationTypes,
+  //   effectiveBatchSize
+  // );
 
   const courseIndexRows = plan.courseIndexes.map((row) => ({
     key: row.key,
@@ -802,23 +802,23 @@ async function insertDownloadBundle(
     effectiveBatchSize
   );
 
-  const locationRows = plan.locations.map((row) => ({
-    key: row.key,
-    doc: {
-      ...row.doc,
-      campusId: requireId(campusIds, row.campusKey, "Campus"),
-    },
-  }));
-  const locationIds = await insertKeyedRows<
-    LocationDoc & { campusId: Id<"campuses"> },
-    "locations"
-  >(
-    client,
-    seedFunctions.insertLocations,
-    "Locations",
-    locationRows,
-    effectiveBatchSize
-  );
+  // const locationRows = plan.locations.map((row) => ({
+  //   key: row.key,
+  //   doc: {
+  //     ...row.doc,
+  //     campusId: requireId(campusIds, row.campusKey, "Campus"),
+  //   },
+  // }));
+  // const locationIds = await insertKeyedRows<
+  //   LocationDoc & { campusId: Id<"campuses"> },
+  //   "locations"
+  // >(
+  //   client,
+  //   seedFunctions.insertLocations,
+  //   "Locations",
+  //   locationRows,
+  //   effectiveBatchSize
+  // );
 
   console.log("Course index sources: skipped");
 
@@ -833,38 +833,38 @@ async function insertDownloadBundle(
     heavyBatchSize
   );
 
-  await insertUnkeyedRows(
-    client,
-    seedFunctions.insertLocationTypeLocations,
-    "Location type links",
-    plan.locationTypeLocations.map((row) => ({
-      locationId: requireId(locationIds, row.locationKey, "Location"),
-      typeId: requireId(locationTypeIds, row.typeKey, "Location type"),
-    })),
-    effectiveBatchSize
-  );
+  // await insertUnkeyedRows(
+  //   client,
+  //   seedFunctions.insertLocationTypeLocations,
+  //   "Location type links",
+  //   plan.locationTypeLocations.map((row) => ({
+  //     locationId: requireId(locationIds, row.locationKey, "Location"),
+  //     typeId: requireId(locationTypeIds, row.typeKey, "Location type"),
+  //   })),
+  //   effectiveBatchSize
+  // );
 
-  await insertUnkeyedRows(
-    client,
-    seedFunctions.insertLocationImages,
-    "Location images",
-    plan.locationImages.map((row) => ({
-      locationId: requireId(locationIds, row.locationKey, "Location"),
-      imageUrl: row.imageUrl,
-    })),
-    effectiveBatchSize
-  );
+  // await insertUnkeyedRows(
+  //   client,
+  //   seedFunctions.insertLocationImages,
+  //   "Location images",
+  //   plan.locationImages.map((row) => ({
+  //     locationId: requireId(locationIds, row.locationKey, "Location"),
+  //     imageUrl: row.imageUrl,
+  //   })),
+  //   effectiveBatchSize
+  // );
 
-  await insertUnkeyedRows(
-    client,
-    seedFunctions.insertLocationAltNames,
-    "Location alt names",
-    plan.locationAltNames.map((row) => ({
-      locationId: requireId(locationIds, row.locationKey, "Location"),
-      altName: row.altName,
-    })),
-    heavyBatchSize
-  );
+  // await insertUnkeyedRows(
+  //   client,
+  //   seedFunctions.insertLocationAltNames,
+  //   "Location alt names",
+  //   plan.locationAltNames.map((row) => ({
+  //     locationId: requireId(locationIds, row.locationKey, "Location"),
+  //     altName: row.altName,
+  //   })),
+  //   heavyBatchSize
+  // );
 
   console.log("");
   console.log(chalk.green("Convex upload completed."));
